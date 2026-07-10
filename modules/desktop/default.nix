@@ -70,7 +70,7 @@ in
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
-        xdg-desktop-portal-kde
+        kdePackages.xdg-desktop-portal-kde
         xdg-desktop-portal-gtk    # GTK app compatibility
       ];
     };
