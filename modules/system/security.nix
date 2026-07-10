@@ -163,23 +163,18 @@ in
 
     # ── fail2ban ──────────────────────────────────────────────────────────────
     services.fail2ban = lib.mkIf cfg.fail2ban.enable {
-      enable   = true;
-      maxretry = cfg.fail2ban.maxRetries;
-      bantime  = cfg.fail2ban.bantime;
-      findtime = cfg.fail2ban.findtime;
+      enable  = true;
+      bantime = cfg.fail2ban.bantime;
 
-      jails = {
-        sshd = {
-          settings = {
-            enabled  = true;
-            port     = toString cfg.firewall.sshPort;
-            filter   = "sshd";
-            logpath  = "/var/log/auth.log %(journalmatch)s";
-            maxretry = cfg.fail2ban.maxRetries;
-            bantime  = cfg.fail2ban.bantime;
-          };
-        };
-      };
+      jails.sshd = ''
+        enabled  = true
+        port     = ${toString cfg.firewall.sshPort}
+        filter   = sshd
+        logpath  = /var/log/auth.log %(journalmatch)s
+        maxretry = ${toString cfg.fail2ban.maxRetries}
+        findtime = ${cfg.fail2ban.findtime}
+        bantime  = ${cfg.fail2ban.bantime}
+      '';
     };
 
     # ── USBGuard ──────────────────────────────────────────────────────────────
