@@ -112,32 +112,30 @@ in
     # ── Nixpkgs unfree packages needed ───────────────────────────────────────
     nixpkgs.config.allowUnfree = lib.mkDefault true;   # libdvdcss, NVIDIA, etc.
 
-    # ── VA-API environment variables ─────────────────────────────────────────
-    environment.variables = lib.mkIf (cfg.vaapi && cfg.hardwareDecode) (lib.mkMerge [
-      {
-        LIBVA_MESSAGING_LEVEL = "1";
-      }
-      (lib.mkIf (gpu.type == "intel") {
-        LIBVA_DRIVER_NAME = "iHD";   # modern iHD driver (Broadwell+)
-      })
-      (lib.mkIf (gpu.type == "amd") {
-        LIBVA_DRIVER_NAME = "radeonsi";
-      })
-      (lib.mkIf (gpu.type == "nvidia") {
-        LIBVA_DRIVER_NAME       = "nvidia";
-        __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa.drivers}/share/glvnd/egl_vendor.d/50_mesa.json";
-      })
-    ]);
-
-    # ── VDPAU driver ─────────────────────────────────────────────────────────
-    environment.variables = lib.mkIf (cfg.vdpau && cfg.hardwareDecode) (lib.mkMerge [
-      (lib.mkIf (gpu.type == "nvidia") {
-        VDPAU_DRIVER = "nvidia";
-      })
-      (lib.mkIf (gpu.type == "amd" || gpu.type == "intel") {
-        VDPAU_DRIVER = "va_gl";  # VDPAU via VA-API bridge
-      })
-    ]);
+    # ── VA-API + VDPAU environment variables ─────────────────────────────────
+    environment.variables = lib.mkMerge [
+      (lib.mkIf (cfg.vaapi && cfg.hardwareDecode) (lib.mkMerge [
+        { LIBVA_MESSAGING_LEVEL = "1"; }
+        (lib.mkIf (gpu.type == "intel") {
+          LIBVA_DRIVER_NAME = "iHD";
+        })
+        (lib.mkIf (gpu.type == "amd") {
+          LIBVA_DRIVER_NAME = "radeonsi";
+        })
+        (lib.mkIf (gpu.type == "nvidia") {
+          LIBVA_DRIVER_NAME              = "nvidia";
+          __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa.drivers}/share/glvnd/egl_vendor.d/50_mesa.json";
+        })
+      ]))
+      (lib.mkIf (cfg.vdpau && cfg.hardwareDecode) (lib.mkMerge [
+        (lib.mkIf (gpu.type == "nvidia") {
+          VDPAU_DRIVER = "nvidia";
+        })
+        (lib.mkIf (gpu.type == "amd" || gpu.type == "intel") {
+          VDPAU_DRIVER = "va_gl";
+        })
+      ]))
+    ];
 
     # ── DVD/Blu-ray kernel module ─────────────────────────────────────────────
     boot.kernelModules = lib.mkIf (cfg.dvd || cfg.bluray) [ "sg" ];
