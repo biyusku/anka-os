@@ -9,7 +9,7 @@
     ];
     extra-trusted-public-keys = [
       # Replace this placeholder with the real key from: cachix use anka-os
-      "anka-os.cachix.org-1:PLACEHOLDER_PUBLIC_KEY_REPLACE_ME="
+      "anka-os.cachix.org-1:u9yt44pc+SaTI7iBP2t+r0E62ECtrOx8on0Y5V8pUyM="
     ];
   };
 
