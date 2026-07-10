@@ -164,7 +164,6 @@ in
     # ── fail2ban ──────────────────────────────────────────────────────────────
     services.fail2ban = lib.mkIf cfg.fail2ban.enable {
       enable  = true;
-      bantime = cfg.fail2ban.bantime;
 
       jails.sshd = ''
         enabled  = true
