@@ -1,0 +1,45 @@
+# Nix build outputs
+result
+result-*
+.direnv/
+.nix-eval-cache/
+
+# Nix flake lock (push edilmeli ama local overrides değil)
+# flake.lock → push ET, aşağıdakiler değil:
+
+# Secret / local config
+*.secret
+*.env
+.env*
+secrets.nix
+secrets/
+hardware-configuration.nix
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ISO build outputs (büyük dosyalar)
+*.iso
+*.qcow2
+*.img

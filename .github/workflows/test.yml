@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Nix flake checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: anka-os
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: nix flake check
+        run: nix flake check
+
+      - name: Dry-run ISO build (amd)
+        run: nix build .#packages.x86_64-linux.iso-amd --dry-run
+
+      - name: NixOS configuration dry-run
+        run: |
+          nix build .#nixosConfigurations.anka.config.system.build.toplevel --dry-run

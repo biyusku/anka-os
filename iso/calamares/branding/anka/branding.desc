@@ -1,0 +1,71 @@
+# Kiwimi OS — Calamares branding descriptor
+# https://github.com/calamares/calamares/blob/calamares/src/branding/default/branding.desc
+
+---
+componentName: kiwimi
+
+# ── Product identity ──────────────────────────────────────────────────────────
+strings:
+  productName:       "Kiwimi OS"
+  shortProductName:  "Kiwimi"
+  version:           "1.0"
+  shortVersion:      "1.0"
+  versionedName:     "Kiwimi OS 1.0"
+  shortVersionedName: "Kiwimi 1.0"
+  bootloaderEntryName: "Kiwimi OS"
+  productUrl:        "https://kiwimi.dev"
+  supportUrl:        "https://github.com/kiwimi-os/kiwimi-os/issues"
+  knownIssuesUrl:    "https://github.com/kiwimi-os/kiwimi-os/issues"
+  releaseNotesUrl:   "https://kiwimi.dev/release-notes"
+
+# ── Welcome page ──────────────────────────────────────────────────────────────
+# Style: true = use Calamares' built-in styled welcome, false = use productWelcome
+welcomeStyleCalamares: true
+
+# Show "What's new" or changelog on welcome page
+welcomeExpandingLogo: false
+
+# ── Images & assets ────────────────────────────────────────────────────────────
+# All paths are relative to this branding.desc file
+images:
+  productLogo:       "kiwimi-logo.png"
+  productIcon:       "kiwimi-logo.png"
+  productWelcome:    "welcome.png"
+
+# ── Color scheme (dark theme) ──────────────────────────────────────────────────
+style:
+  # Sidebar gradient: top → bottom
+  sidebarBackground:       "#1a1a2e"
+  sidebarText:             "#e0e0e0"
+  sidebarTextHighlight:    "#00d4aa"
+  sidebarSelect:           "#16213e"
+
+  # Main content area
+  windowBackground:        "#0f0f1a"
+  windowText:              "#e8e8f0"
+
+  # Accent / interactive elements
+  highlight:               "#00d4aa"
+  highlightText:           "#0f0f1a"
+
+  # Buttons
+  buttonBackground:        "#00d4aa"
+  buttonText:              "#0f0f1a"
+  buttonHoverBackground:   "#00b894"
+
+  # Progress bar
+  progressColor:           "#00d4aa"
+  progressBackground:      "#16213e"
+
+  # Alerts and info boxes
+  alertBackground:         "#16213e"
+  alertText:               "#e0e0e0"
+
+  # Fonts
+  # Leave empty to use system defaults
+  defaultFontFamily:       ""
+  defaultFontSize:         ""
+
+# ── Slideshow shown during installation ────────────────────────────────────────
+slideshow:               "show.qml"
+slideshowAPI:            2
