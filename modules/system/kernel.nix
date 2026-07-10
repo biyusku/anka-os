@@ -35,9 +35,9 @@ in
   config = {
     # ── Kernel package selection ──────────────────────────────────────────
     boot.kernelPackages = lib.mkDefault (
-      if      cfg.variant == "cachyos-bore"  then pkgs."linuxPackages_cachyos-bore"
+      if      cfg.variant == "cachyos-bore"  then pkgs.linuxPackages_cachyos
       else if cfg.variant == "cachyos"       then pkgs.linuxPackages_cachyos
-      else if cfg.variant == "cachyos-lto"   then pkgs."linuxPackages_cachyos-lto"
+      else if cfg.variant == "cachyos-lto"   then pkgs.linuxPackages_cachyos
       else if cfg.variant == "linux_zen"     then pkgs.linuxPackages_zen
       else if cfg.variant == "linux_xanmod"  then pkgs.linuxPackages_xanmod_latest
       else                                        pkgs.linuxPackages_latest
