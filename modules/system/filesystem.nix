@@ -77,7 +77,7 @@ in
 
     # ── Snapper automatic snapshots (Btrfs only) ──────────────────────────
     services.snapper = lib.mkIf (cfg.rootFormat == "btrfs" && cfg.btrfsSubvolumes) {
-      snapshotRootDuring = lib.mkDefault false; # enable per-host if needed
+      snapshotRootOnBoot = lib.mkDefault false;
       configs.root = {
         SUBVOLUME    = "/";
         ALLOW_GROUPS = [ "wheel" ];
