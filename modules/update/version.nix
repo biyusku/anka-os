@@ -4,25 +4,47 @@
 # This file is auto-updated by the build system
 
 {
-  ankaVersion = {
-    major = 0;
-    minor = 1;
-    patch = 0;
-    codename = "Phoenix";
-    full = "0.1.0-Phoenix";
+  options.anka.version = {
+    major = lib.mkOption {
+      type        = lib.types.int;
+      default     = 0;
+      readOnly    = true;
+      description = "ANKA OS major version number";
+    };
 
-    # Build metadata
-    buildDate = "2025-01-01";
-    nixosBase = "24.05";
+    minor = lib.mkOption {
+      type        = lib.types.int;
+      default     = 1;
+      readOnly    = true;
+      description = "ANKA OS minor version number";
+    };
 
-    # Component versions
-    components = {
-      ankaAI = "0.1.0";
-      ankaMCP = "0.1.0";
-      ankaUpdate = "0.1.0";
+    patch = lib.mkOption {
+      type        = lib.types.int;
+      default     = 0;
+      readOnly    = true;
+      description = "ANKA OS patch version number";
+    };
+
+    codename = lib.mkOption {
+      type        = lib.types.str;
+      default     = "Phoenix";
+      readOnly    = true;
+      description = "ANKA OS release codename";
+    };
+
+    full = lib.mkOption {
+      type        = lib.types.str;
+      default     = "0.1.0-Phoenix";
+      readOnly    = true;
+      description = "Full ANKA OS version string (major.minor.patch-codename)";
+    };
+
+    nixosBase = lib.mkOption {
+      type        = lib.types.str;
+      default     = "24.05";
+      readOnly    = true;
+      description = "NixOS base release this ANKA version is built on";
     };
   };
-
-  # Helper to format version string
-  mkVersionString = v: "${toString v.major}.${toString v.minor}.${toString v.patch}";
 }

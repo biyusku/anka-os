@@ -3,11 +3,17 @@
 with lib;
 
 let
-  cfg = config.services.ankaUpdate;
+  cfg = config.anka.update;
 in
 {
-  options.services.ankaUpdate = {
+  options.anka.update = {
     enable = mkEnableOption "ANKA System Update Manager";
+
+    channel = mkOption {
+      type = types.enum [ "stable" "unstable" "testing" ];
+      default = "stable";
+      description = "ANKA update channel to track";
+    };
 
     checkInterval = mkOption {
       type = types.str;
