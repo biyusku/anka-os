@@ -105,9 +105,6 @@ in
     # Detailed settings live in modules/performance/gaming.nix
     programs.gamemode.enable = true;
 
-    # ── MangoHud ─────────────────────────────────────────────────────────
-    programs.mangohud.enable = true;
-
     # ── Extra gaming packages ─────────────────────────────────────────────
     environment.systemPackages = with pkgs; lib.concatLists [
       (lib.optional cfg.lutris  lutris)
