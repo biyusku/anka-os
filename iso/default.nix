@@ -128,7 +128,7 @@
   # ── NetworkManager ─────────────────────────────────────────────────────────
   networking = {
     networkmanager.enable = true;
-    wireless.enable       = false; # NM handles Wi-Fi
+    wireless.enable       = lib.mkForce false; # NM handles Wi-Fi
     hostName              = "anka-live";
   };
 
