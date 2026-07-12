@@ -211,7 +211,7 @@
 
   hardware = {
     bluetooth.enable     = true;
-    pulseaudio.enable    = lib.mkForce false; # using pipewire
+    pulseaudio.enable    = false; # using pipewire
     graphics.enable      = true;
   };
 
