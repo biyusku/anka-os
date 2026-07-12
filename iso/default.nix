@@ -88,8 +88,8 @@
       enable    = true;
       wayland.enable = true;
       autoLogin = {
-        enable = true;
-        user   = "anka";
+        enable = lib.mkForce true;
+        user   = lib.mkForce "anka";
       };
     };
     defaultSession = "plasma";
