@@ -41,10 +41,15 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Install notifier script
+    # Install update scripts
+    environment.etc."anka/scripts/anka-rebuild.sh" = {
+      source = ./anka-rebuild.sh;
+      mode   = "0755";
+    };
+
     environment.etc."anka/scripts/kde-notifier.py" = {
-      source = ../../modules/update/kde-notifier.py;
-      mode = "0755";
+      source = ./kde-notifier.py;
+      mode   = "0755";
     };
 
     # Version tracking
@@ -75,6 +80,36 @@ in
         OnUnitActiveSec = cfg.checkInterval;
         Unit = "anka-update-check.service";
         Persistent = true;
+      };
+    };
+
+    # One-shot service triggered by KCM panel or CLI to apply updates
+    systemd.services.anka-apply-update = {
+      description = "ANKA Apply System Update";
+      after       = [ "network-online.target" ];
+      wants       = [ "network-online.target" ];
+      serviceConfig = {
+        Type       = "oneshot";
+        ExecStart  = "${pkgs.bash}/bin/bash ${cfg.flakePath}/scripts/anka-rebuild.sh apply";
+        User       = "root";
+        Environment = [
+          "ANKA_FLAKE_PATH=${cfg.flakePath}"
+          "ANKA_NOTIFY=${if cfg.notifyUser then "true" else "false"}"
+        ];
+      };
+    };
+
+    # One-shot service for rollback
+    systemd.services.anka-rollback = {
+      description = "ANKA Rollback to Previous Generation";
+      serviceConfig = {
+        Type      = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash ${cfg.flakePath}/scripts/anka-rebuild.sh rollback";
+        User      = "root";
+        Environment = [
+          "ANKA_FLAKE_PATH=${cfg.flakePath}"
+          "ANKA_NOTIFY=${if cfg.notifyUser then "true" else "false"}"
+        ];
       };
     };
 
