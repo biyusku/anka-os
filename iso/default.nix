@@ -165,7 +165,7 @@
     wget
     curl
     htop
-    neofetch
+    fastfetch
     gparted
     ntfs3g
 

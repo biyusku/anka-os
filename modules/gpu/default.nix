@@ -114,14 +114,13 @@ in
         enable      = true;
         enable32Bit = true;
         extraPackages = with pkgs; [
-          vaapiVdpau
-          libvdpau-va-gl
+          nvidia-vaapi-driver   # Direct VA-API support for NVIDIA (replaces vaapiVdpau)
         ];
       };
 
       environment.systemPackages = with pkgs; [
-        nvtopPackages.nvidia   # NVIDIA GPU monitor
-        cudatoolkit            # CUDA tools
+        nvtopPackages.nvidia              # NVIDIA GPU monitor
+        cudaPackages.cudatoolkit          # CUDA tools
       ];
 
       # NVIDIA Wayland environment variables
@@ -142,8 +141,7 @@ in
         enable32Bit = true;
         extraPackages = with pkgs; [
           intel-media-driver    # iHD (Broadwell+)
-          intel-vaapi-driver    # i965 (older Intel)
-          vaapiIntel
+          intel-vaapi-driver    # i965 (older Intel, replaces removed vaapiIntel)
           intel-compute-runtime # OpenCL
         ];
       };

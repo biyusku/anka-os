@@ -105,13 +105,14 @@ in
         noto-fonts-cjk-sans      # CJK (Chinese/Japanese/Korean)
         noto-fonts-emoji
         liberation_ttf           # free MS font substitutes
-        (nerdfonts.override { fonts = [ "JetBrainsMono" "FiraCode" ]; })
+        nerd-fonts.jetbrains-mono
+        nerd-fonts.fira-code
       ];
       fontconfig = {
         defaultFonts = {
           serif      = [ "Noto Serif" "Liberation Serif" ];
           sansSerif  = [ "Noto Sans" "Liberation Sans" ];
-          monospace  = [ "JetBrainsMono Nerd Font" "Noto Sans Mono" ];
+          monospace  = [ "JetBrainsMonoNL Nerd Font" "Noto Sans Mono" ];
           emoji      = [ "Noto Color Emoji" ];
         };
         antialias = true;

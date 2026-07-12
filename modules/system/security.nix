@@ -139,7 +139,7 @@ in
     # ── nftables firewall ─────────────────────────────────────────────────────
     networking.nftables.enable  = lib.mkIf cfg.firewall.enable true;
     networking.firewall.enable  = lib.mkIf cfg.firewall.enable true;
-    networking.firewall.backend = lib.mkIf cfg.firewall.enable "nftables";
+    # networking.nftables.enable already sets the backend to nftables — no separate backend option needed
 
     networking.firewall.allowedTCPPorts =
       lib.mkIf cfg.firewall.enable (

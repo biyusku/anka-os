@@ -78,7 +78,7 @@ in
     ++ lib.optionals (cfg.vdpau && cfg.hardwareDecode) (lib.concatLists [
       [ libvdpau ]
       (lib.optional (gpu.type == "nvidia") vdpauinfo)
-      (lib.optional (gpu.type == "amd")    libvdpau-va-gl)
+      # libvdpau-va-gl removed from nixpkgs (unmaintained); AMD VDPAU via Mesa VA-API is sufficient
     ])
     # DVD
     ++ lib.optionals cfg.dvd [
