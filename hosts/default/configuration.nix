@@ -41,6 +41,9 @@
     # ── Update system ─────────────────────────────────────────────────────
     ../../modules/update/default.nix
     ../../modules/update/version.nix
+
+    # ── Adobe compatibility layer ─────────────────────────────────────────
+    ../../modules/adobe/default.nix
   ];
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -137,6 +140,9 @@
   anka.accessibility.enable  = false;  # opt-in; enable per-user if needed
   # anka.accessibility.orca  = true;
   # anka.accessibility.largeFonts = true;
+
+  # ── Adobe compatibility layer ─────────────────────────────────────────
+  anka.adobe.enable = false;   # opt-in; enable per-user with: anka.adobe.enable = true
 
   # ── Update system ─────────────────────────────────────────────────────
   anka.update.enable   = true;
