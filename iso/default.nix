@@ -129,7 +129,7 @@
   networking = {
     networkmanager.enable = true;
     wireless.enable       = lib.mkForce false; # NM handles Wi-Fi
-    hostName              = "anka-live";
+    hostName              = lib.mkForce "anka-live";
   };
 
   # ── Calamares installer configuration ─────────────────────────────────────
@@ -211,7 +211,7 @@
 
   hardware = {
     bluetooth.enable     = true;
-    pulseaudio.enable    = false; # using pipewire
+    pulseaudio.enable    = lib.mkForce false; # using pipewire
     graphics.enable      = true;
   };
 
