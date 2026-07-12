@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(kcm_kiwimi_update)
+project(kcm_anka_update)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,11 +24,11 @@ find_package(KF6 REQUIRED COMPONENTS
 )
 
 # ── KCM target ────────────────────────────────────────────────────────────────
-kcmutils_add_qml_kcm(kcm_kiwimi_update
-    SOURCES kcm_kiwimi_update.cpp
+kcmutils_add_qml_kcm(kcm_anka_update
+    SOURCES kcm_anka_update.cpp
 )
 
-target_link_libraries(kcm_kiwimi_update PRIVATE
+target_link_libraries(kcm_anka_update PRIVATE
     Qt6::Core
     Qt6::Quick
     Qt6::Network
@@ -40,7 +40,7 @@ target_link_libraries(kcm_kiwimi_update PRIVATE
 # ── QML package ───────────────────────────────────────────────────────────────
 install(
     DIRECTORY package
-    DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/plasma/kiwimi
+    DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/plasma/anka
 )
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

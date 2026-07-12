@@ -6,6 +6,7 @@ let
   cfg = config.anka.update;
 in
 {
+  imports = [ ./kcm ];
   options.anka.update = {
     enable = mkEnableOption "ANKA System Update Manager";
 

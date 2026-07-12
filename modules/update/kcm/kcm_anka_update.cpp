@@ -13,7 +13,7 @@
 #include <QString>
 #include <QUrl>
 
-class KiwimiUpdateKCM : public KQuickConfigModule
+class AnkaUpdateKCM : public KQuickConfigModule
 {
     Q_OBJECT
 
@@ -24,7 +24,7 @@ class KiwimiUpdateKCM : public KQuickConfigModule
     Q_PROPERTY(QString updateLog        READ updateLog        NOTIFY updateLogChanged)
 
 public:
-    explicit KiwimiUpdateKCM(QObject *parent, const KPluginMetaData &metaData)
+    explicit AnkaUpdateKCM(QObject *parent, const KPluginMetaData &metaData)
         : KQuickConfigModule(parent, metaData)
         , m_network(new QNetworkAccessManager(this))
         , m_checkTimer(new QTimer(this))
@@ -32,7 +32,7 @@ public:
         setButtons(NoAdditionalButton);
 
         // Read local installed version
-        QFile vf(QStringLiteral("/etc/kiwimi-version"));
+        QFile vf(QStringLiteral("/etc/anka/VERSION"));
         if (vf.open(QIODevice::ReadOnly | QIODevice::Text)) {
             m_currentVersion = QString::fromUtf8(vf.readAll()).trimmed();
             vf.close();
@@ -42,11 +42,11 @@ public:
 
         // Periodic check every 5 minutes
         m_checkTimer->setInterval(5 * 60 * 1000);
-        connect(m_checkTimer, &QTimer::timeout, this, &KiwimiUpdateKCM::checkForUpdates);
+        connect(m_checkTimer, &QTimer::timeout, this, &AnkaUpdateKCM::checkForUpdates);
         m_checkTimer->start();
 
         // Initial check on load
-        QTimer::singleShot(500, this, &KiwimiUpdateKCM::checkForUpdates);
+        QTimer::singleShot(500, this, &AnkaUpdateKCM::checkForUpdates);
     }
 
     // ── Property accessors ───────────────────────────────────────────────────
@@ -63,7 +63,7 @@ public Q_SLOTS:
     void checkForUpdates()
     {
         QNetworkRequest req(QUrl(QStringLiteral(
-            "https://api.github.com/repos/kiwimi-os/kiwimi/releases/latest"
+            "https://api.github.com/repos/biyusku/anka-os/releases/latest"
         )));
         req.setRawHeader("Accept", "application/vnd.github+json");
 
@@ -105,7 +105,7 @@ public Q_SLOTS:
         proc->setArguments({
             QStringLiteral("systemctl"),
             QStringLiteral("start"),
-            QStringLiteral("kiwimi-apply-update.service"),
+            QStringLiteral("anka-apply-update.service"),
         });
 
         connect(proc, &QProcess::readyReadStandardOutput, this, [this, proc]() {
@@ -123,8 +123,7 @@ public Q_SLOTS:
             Q_EMIT updatingChanged();
 
             if (exitCode == 0) {
-                // Re-read local version after successful update
-                QFile vf(QStringLiteral("/etc/kiwimi-version"));
+                QFile vf(QStringLiteral("/etc/anka/VERSION"));
                 if (vf.open(QIODevice::ReadOnly | QIODevice::Text)) {
                     m_currentVersion = QString::fromUtf8(vf.readAll()).trimmed();
                     vf.close();
@@ -141,13 +140,12 @@ public Q_SLOTS:
     // ── Cancel running update ────────────────────────────────────────────────
     void cancelUpdate()
     {
-        // kiwimi-apply-update is a oneshot service; kill the process group
         auto *proc = new QProcess(this);
         proc->setProgram(QStringLiteral("pkexec"));
         proc->setArguments({
             QStringLiteral("systemctl"),
             QStringLiteral("stop"),
-            QStringLiteral("kiwimi-apply-update.service"),
+            QStringLiteral("anka-apply-update.service"),
         });
         connect(proc, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
                 proc, &QProcess::deleteLater);
@@ -163,9 +161,9 @@ public Q_SLOTS:
         auto *proc = new QProcess(this);
         proc->setProgram(QStringLiteral("pkexec"));
         proc->setArguments({
-            QStringLiteral("nixos-rebuild"),
-            QStringLiteral("switch"),
-            QStringLiteral("--rollback"),
+            QStringLiteral("systemctl"),
+            QStringLiteral("start"),
+            QStringLiteral("anka-rollback.service"),
         });
         connect(proc, &QProcess::readyReadStandardOutput, this, [this, proc]() {
             m_updateLog += QString::fromUtf8(proc->readAllStandardOutput());
@@ -187,7 +185,7 @@ public Q_SLOTS:
         proc->setProgram(QStringLiteral("journalctl"));
         proc->setArguments({
             QStringLiteral("-u"),
-            QStringLiteral("kiwimi-apply-update"),
+            QStringLiteral("anka-apply-update"),
             QStringLiteral("-n"),
             QStringLiteral("50"),
             QStringLiteral("--no-pager"),
@@ -219,5 +217,5 @@ private:
     QString m_updateLog;
 };
 
-K_PLUGIN_CLASS_WITH_JSON(KiwimiUpdateKCM, "kcm_kiwimi_update.json")
-#include "kcm_kiwimi_update.moc"
+K_PLUGIN_CLASS_WITH_JSON(AnkaUpdateKCM, "kcm_anka_update.json")
+#include "kcm_anka_update.moc"

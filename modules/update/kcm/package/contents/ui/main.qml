@@ -19,7 +19,7 @@ KCMUtils.SimpleKCM {
             Layout.fillWidth: true
             visible: kcm.updateAvailable && !kcm.updating
             type: Kirigami.MessageType.Positive
-            text: qsTr("Kiwimi OS %1 sürümü mevcut.").arg(kcm.availableVersion)
+            text: qsTr("ANKA OS %1 sürümü mevcut.").arg(kcm.availableVersion)
 
             actions: [
                 Kirigami.Action {
@@ -31,7 +31,7 @@ KCMUtils.SimpleKCM {
                     text: qsTr("Değişiklik Notları")
                     icon.name: "internet-web-browser"
                     onTriggered: Qt.openUrlExternally(
-                        "https://github.com/kiwimi-os/kiwimi/releases/tag/v" + kcm.availableVersion
+                        "https://github.com/biyusku/anka-os/releases/tag/v" + kcm.availableVersion
                     )
                 }
             ]
@@ -111,7 +111,7 @@ KCMUtils.SimpleKCM {
             visible: !kcm.updateAvailable && !kcm.updating && kcm.updateLog.length === 0
             icon.name: "security-high"
             text: qsTr("Sistem Güncel")
-            explanation: qsTr("Kiwimi OS %1 en son sürüm.").arg(kcm.currentVersion)
+            explanation: qsTr("ANKA OS %1 en son sürüm.").arg(kcm.currentVersion)
         }
 
         // ── Action buttons ────────────────────────────────────────────────────
@@ -150,7 +150,6 @@ KCMUtils.SimpleKCM {
 
             Item { Layout.fillWidth: true }
 
-            // Rollback — always visible
             QQC2.Button {
                 text: qsTr("Önceki Sürüme Dön")
                 icon.name: "edit-undo"

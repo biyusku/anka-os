@@ -1,131 +1,79 @@
 #!/usr/bin/env bash
-# ANKA OS — System rebuild / update helper
-# Called by systemd services; do not run directly as a regular user.
-#
-# Usage: anka-rebuild.sh <check|apply|rollback>
-#
-# Environment (set by systemd unit):
-#   ANKA_FLAKE_PATH   – path to the checked-out ANKA flake  (default: /etc/anka)
-#   ANKA_AUTO_APPLY   – "true" to apply without prompting    (default: false)
-#   ANKA_NOTIFY       – "true" to send KDE notifications     (default: true)
-
 set -euo pipefail
 
 FLAKE_PATH="${ANKA_FLAKE_PATH:-/etc/anka}"
 AUTO_APPLY="${ANKA_AUTO_APPLY:-false}"
 NOTIFY="${ANKA_NOTIFY:-true}"
-NOTIFIER="${FLAKE_PATH}/scripts/kde-notifier.py"
-VERSION_FILE="${FLAKE_PATH}/VERSION"
-LOG_DIR="/var/log/anka"
-LOG_FILE="${LOG_DIR}/update.log"
-
-mkdir -p "$LOG_DIR"
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
-}
 
 notify() {
-    local action="$1" data="$2"
-    if [[ "$NOTIFY" == "true" ]] && [[ -x "$NOTIFIER" ]]; then
-        python3 "$NOTIFIER" "$action" "$data" 2>>"$LOG_FILE" || true
+    if [[ "$NOTIFY" == "true" ]] && command -v notify-send &>/dev/null; then
+        notify-send --app-name="ANKA Updates" --icon=system-software-update "$1" "$2" || true
     fi
 }
 
-current_version() {
-    if [[ -f "$VERSION_FILE" ]]; then
-        cat "$VERSION_FILE"
-    else
-        echo "unknown"
-    fi
-}
+cmd="${1:-check}"
 
-# ── Commands ──────────────────────────────────────────────────────────────────
+case "$cmd" in
+    check)
+        echo "Checking for ANKA OS updates..."
+        latest=$(curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/biyusku/anka-os/releases/latest" \
+            | grep '"tag_name"' | sed 's/.*"v\?\([^"]*\)".*/\1/')
 
-cmd_check() {
-    log "Checking for ANKA updates (flake: ${FLAKE_PATH})"
+        current=""
+        if [[ -f /etc/anka/VERSION ]]; then
+            current=$(cat /etc/anka/VERSION | tr -d '[:space:]')
+        fi
 
-    # Get revision of the local lock file (what is currently deployed)
-    local local_rev
-    local_rev=$(nix flake metadata "$FLAKE_PATH" \
-        --no-update-lock-file --json 2>>"$LOG_FILE" \
-        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('revision','')[:12])" \
-        2>/dev/null || echo "")
+        if [[ -z "$latest" ]]; then
+            echo "Could not fetch latest release."
+            exit 0
+        fi
 
-    # Get revision of the upstream (fetch latest lock)
-    local remote_rev
-    remote_rev=$(nix flake metadata "$FLAKE_PATH" \
-        --json 2>>"$LOG_FILE" \
-        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('revision','')[:12])" \
-        2>/dev/null || echo "")
+        if [[ "$latest" == "$current" ]]; then
+            echo "System is up to date ($current)."
+            exit 0
+        fi
 
-    local current
-    current=$(current_version)
-
-    log "Local revision : ${local_rev:-unknown}"
-    log "Remote revision: ${remote_rev:-unknown}"
-    log "Current version: $current"
-
-    if [[ -n "$remote_rev" ]] && [[ "$remote_rev" != "$local_rev" ]]; then
-        log "Update available: $local_rev -> $remote_rev"
-        notify "available" "{\"current\": \"$current\", \"available\": \"$remote_rev\"}"
+        echo "Update available: $current -> $latest"
+        notify "ANKA Update Available" "Version $latest is ready to install."
 
         if [[ "$AUTO_APPLY" == "true" ]]; then
-            log "Auto-apply enabled — starting update"
-            cmd_apply
+            exec "$0" apply
         fi
-    else
-        log "System is up to date (rev: ${local_rev:-unknown})"
-    fi
-}
+        ;;
 
-cmd_apply() {
-    log "Starting ANKA system update..."
+    apply)
+        echo "Applying ANKA OS update..."
+        notify "ANKA Update" "Starting system update, please wait..."
 
-    local current
-    current=$(current_version)
+        nixos-rebuild switch \
+            --flake "${FLAKE_PATH}#anka" \
+            --option accept-flake-config true \
+            2>&1
 
-    if nixos-rebuild switch --flake "${FLAKE_PATH}#anka" 2>&1 | tee -a "$LOG_FILE"; then
-        local new_version
-        new_version=$(current_version)
-        log "Update complete: $current -> $new_version"
-        notify "complete" "$new_version"
-    else
-        local exit_code=$?
-        log "Update failed (exit code: $exit_code) — see $LOG_FILE"
-        notify "failed" "nixos-rebuild exited with code $exit_code. See $LOG_FILE for details."
-        exit "$exit_code"
-    fi
-}
+        new_version=""
+        if [[ -f /etc/anka/VERSION ]]; then
+            new_version=$(cat /etc/anka/VERSION | tr -d '[:space:]')
+        fi
 
-cmd_rollback() {
-    log "Rolling back to previous ANKA generation..."
+        echo "Update complete. Version: ${new_version:-unknown}"
+        notify "ANKA Update Complete" "System updated to version ${new_version:-unknown}."
+        ;;
 
-    if nixos-rebuild switch --rollback 2>&1 | tee -a "$LOG_FILE"; then
-        local version
-        version=$(current_version)
-        log "Rollback complete — now on: $version"
-        notify "complete" "rollback-to-$version"
-    else
-        local exit_code=$?
-        log "Rollback failed (exit code: $exit_code)"
-        notify "failed" "Rollback exited with code $exit_code. See $LOG_FILE."
-        exit "$exit_code"
-    fi
-}
+    rollback)
+        echo "Rolling back to previous NixOS generation..."
+        notify "ANKA Rollback" "Rolling back system, please wait..."
 
-# ── Entrypoint ────────────────────────────────────────────────────────────────
+        nixos-rebuild switch --rollback 2>&1
 
-ACTION="${1:-check}"
+        echo "Rollback complete."
+        notify "ANKA Rollback Complete" "System rolled back successfully."
+        ;;
 
-case "$ACTION" in
-    check)    cmd_check    ;;
-    apply)    cmd_apply    ;;
-    rollback) cmd_rollback ;;
     *)
-        echo "Usage: anka-rebuild.sh <check|apply|rollback>" >&2
+        echo "Usage: $0 {check|apply|rollback}" >&2
         exit 1
         ;;
 esac
