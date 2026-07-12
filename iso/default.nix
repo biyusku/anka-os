@@ -154,6 +154,32 @@
     appendToMenuLabel = " ANKA OS Live";
   };
 
+  # ── Calamares launcher script (ensures correct Wayland env) ──────────────
+  environment.etc."calamares/launch.sh" = {
+    mode = "0755";
+    text = ''
+      #!/bin/sh
+      export XDG_RUNTIME_DIR=/run/user/$(id -u)
+      export WAYLAND_DISPLAY=wayland-0
+      exec calamares "$@"
+    '';
+  };
+
+  # ── Desktop shortcut for installer ────────────────────────────────────────
+  environment.etc."skel/Desktop/install-anka.desktop" = {
+    mode = "0755";
+    text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=Install ANKA OS
+      Comment=Install ANKA OS to your computer
+      Exec=/etc/calamares/launch.sh
+      Icon=system-software-install
+      Terminal=false
+      Categories=System;
+    '';
+  };
+
   # ── Packages available in the live environment ────────────────────────────
   environment.systemPackages = with pkgs; [
     # Installer
