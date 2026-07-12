@@ -62,8 +62,8 @@ in
         enable32Bit = true;
         extraPackages = with pkgs; [
           rocmPackages.clr # ROCm OpenCL (for Ollama GPU acceleration)
-          libva-mesa-driver
-          mesa.drivers
+          # Mesa (RADV Vulkan + radeonsi VA-API) is pulled in automatically
+          # by hardware.graphics.enable — no extra entries needed here
         ];
         # RADV (Vulkan) is provided by Mesa by default; no amdvlk needed
         extraPackages32 = with pkgs; [ ];
