@@ -58,6 +58,8 @@
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
         ./hosts/default/configuration.nix
+        # ── First-run wizard ─────────────────────────────────────────────────
+        ./modules/installer/default.nix
         # ── Update system ────────────────────────────────────────────────────
         ./modules/update/default.nix
         ./modules/update/version.nix

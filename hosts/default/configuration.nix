@@ -169,6 +169,9 @@
     users.anka    = import ./home.nix;
   };
 
+  # ── First-run wizard ─────────────────────────────────────────────────
+  anka.installer.enable = true;
+
   # ── State version — do NOT change after first install ────────────────
   system.stateVersion = "24.11";
 }
