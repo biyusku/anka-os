@@ -23,10 +23,11 @@
       anka-update  = "sudo nix flake update /etc/nixos && anka-rebuild";
     };
 
-    initExtra = ''
+    initContent = ''
       # ANKA banner
       echo "🦅 ANKA OS — $(nixos-version 2>/dev/null || echo 'NixOS')"
     '';
+    dotDir = config.home.homeDirectory;
   };
 
   programs.starship = {
@@ -43,11 +44,11 @@
 
   # ── Git ───────────────────────────────────────────────────────────────
   programs.git = {
-    enable      = true;
-    userName    = "ANKA User";
-    userEmail   = "user@anka.local";
-    extraConfig = {
-      init.defaultBranch = "main";
+    enable   = true;
+    settings = {
+      user.name  = "ANKA User";
+      user.email = "user@anka.local";
+      init.defaultBranch   = "main";
       push.autoSetupRemote = true;
       pull.rebase          = false;
     };
@@ -68,8 +69,9 @@
   xdg = {
     enable              = true;
     userDirs = {
-      enable             = true;
-      createDirectories  = true;
+      enable                = true;
+      createDirectories     = true;
+      setSessionVariables   = true;
       documents          = "${config.home.homeDirectory}/Documents";
       download           = "${config.home.homeDirectory}/Downloads";
       music              = "${config.home.homeDirectory}/Music";

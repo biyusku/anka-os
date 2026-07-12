@@ -1,11 +1,11 @@
 # ANKA OS — Live ISO configuration
 # Build: nix build .#packages.x86_64-linux.iso
-{ config, lib, pkgs, inputs, ... }:
+{ config, lib, pkgs, modulesPath, inputs, ... }:
 
 {
   imports = [
     # Graphical Calamares installer with KDE Plasma 6
-    "${toString <nixpkgs>}/nixos/modules/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix"
+    "${modulesPath}/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix"
 
     # Bring in ANKA system modules (subset safe for ISO)
     ../modules/desktop/default.nix

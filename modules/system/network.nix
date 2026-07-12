@@ -54,15 +54,14 @@ in
 
     # ── systemd-resolved (used by both NM and networkd) ───────────────────
     services.resolved = {
-      enable    = true;
-      dnssec    = if cfg.dnssec then "true" else "allow-downgrade";
-      fallbackDns = cfg.dns;
-      # Use systemd-resolved stub for /etc/resolv.conf
+      enable = true;
       settings = {
         Resolve = {
+          DNSSEC          = if cfg.dnssec then "true" else "allow-downgrade";
+          FallbackDNS     = lib.concatStringsSep " " cfg.dns;
           DNSStubListener = "yes";
-          LLMNR = "no";
-          MulticastDNS = if cfg.mdns then "yes" else "no";
+          LLMNR           = "no";
+          MulticastDNS    = if cfg.mdns then "yes" else "no";
         };
       };
     };
