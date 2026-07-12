@@ -133,13 +133,10 @@
   };
 
   # ── Calamares installer configuration ─────────────────────────────────────
-  services.calamares = {
-    branding     = "anka";
-    # Point Calamares at our custom config directory
-    configDir    = pkgs.runCommand "calamares-anka-config" {} ''
-      cp -r ${./calamares} $out
-    '';
-  };
+  # NixOS has no services.calamares option; drop config files via environment.etc
+  environment.etc."calamares/settings.conf".source  = ./calamares/settings.conf;
+  environment.etc."calamares/modules".source        = ./calamares/modules;
+  environment.etc."calamares/branding/anka".source  = ./calamares/branding/anka;
 
   # ── ISO image settings ─────────────────────────────────────────────────────
   isoImage = {
