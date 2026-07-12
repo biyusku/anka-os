@@ -146,14 +146,14 @@ in
     # ── PipeWire low-latency profile (activated by GameMode) ─────────────────
     # PipeWire itself is configured in modules/desktop; here we only drop
     # the gaming profile that GameMode's custom start/end scripts activate.
-    environment.etc."pipewire/pipewire.conf.d/99-gaming.conf".text = ''
-      context.properties = {
-        default.clock.rate          = 48000
-        default.clock.quantum       = 64
-        default.clock.min-quantum   = 32
-        default.clock.max-quantum   = 512
-      }
-    '';
+    services.pipewire.extraConfig.pipewire."99-gaming" = {
+      "context.properties" = {
+        "default.clock.rate"        = 48000;
+        "default.clock.quantum"     = 64;
+        "default.clock.min-quantum" = 32;
+        "default.clock.max-quantum" = 512;
+      };
+    };
 
     # ── Useful gaming tools ───────────────────────────────────────────────────
     environment.systemPackages = with pkgs; [

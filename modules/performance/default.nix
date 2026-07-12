@@ -164,9 +164,6 @@ in
       ];
     };
 
-    # ── Preload frequently-used executables into page cache ──────────────────
-    services.preload.enable = lib.mkDefault false; # opt-in; SSD users don't need it
-
     # ── Packages ─────────────────────────────────────────────────────────────
     environment.systemPackages = with pkgs; [
       powertop      # CPU power analysis

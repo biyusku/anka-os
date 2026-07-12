@@ -58,11 +58,13 @@ in
       dnssec    = if cfg.dnssec then "true" else "allow-downgrade";
       fallbackDns = cfg.dns;
       # Use systemd-resolved stub for /etc/resolv.conf
-      extraConfig = ''
-        DNSStubListener=yes
-        LLMNR=no
-        MulticastDNS=${if cfg.mdns then "yes" else "no"}
-      '';
+      settings = {
+        Resolve = {
+          DNSStubListener = "yes";
+          LLMNR = "no";
+          MulticastDNS = if cfg.mdns then "yes" else "no";
+        };
+      };
     };
 
     # /etc/resolv.conf → systemd-resolved stub

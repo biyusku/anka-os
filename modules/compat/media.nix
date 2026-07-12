@@ -109,9 +109,6 @@ in
       celluloid   # GTK mpv frontend
     ];
 
-    # ── Nixpkgs unfree packages needed ───────────────────────────────────────
-    nixpkgs.config.allowUnfree = lib.mkDefault true;   # libdvdcss, NVIDIA, etc.
-
     # ── VA-API + VDPAU environment variables ─────────────────────────────────
     environment.variables = lib.mkMerge [
       (lib.mkIf (cfg.vaapi && cfg.hardwareDecode) (lib.mkMerge [

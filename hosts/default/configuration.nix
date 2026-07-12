@@ -169,9 +169,6 @@
     users.anka    = import ./home.nix;
   };
 
-  # ── Nixpkgs ───────────────────────────────────────────────────────────
-  nixpkgs.config.allowUnfree = true;
-
   # ── State version — do NOT change after first install ────────────────
   system.stateVersion = "24.11";
 }
