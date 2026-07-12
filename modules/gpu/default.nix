@@ -61,12 +61,12 @@ in
         enable      = true;
         enable32Bit = true;
         extraPackages = with pkgs; [
-          amdvlk           # AMD Vulkan driver
           rocmPackages.clr # ROCm OpenCL (for Ollama GPU acceleration)
           libva-mesa-driver
           mesa.drivers
         ];
-        extraPackages32 = with pkgs; [ driversi686Linux.amdvlk ];
+        # RADV (Vulkan) is provided by Mesa by default; no amdvlk needed
+        extraPackages32 = with pkgs; [ ];
       };
 
       # ROCm HIP for GPU compute (Ollama, etc.)
