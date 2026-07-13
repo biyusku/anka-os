@@ -103,7 +103,7 @@ in
       packages = with pkgs; [
         noto-fonts
         noto-fonts-cjk-sans      # CJK (Chinese/Japanese/Korean)
-        noto-fonts-emoji
+        noto-fonts-color-emoji
         liberation_ttf           # free MS font substitutes
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
