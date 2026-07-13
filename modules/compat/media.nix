@@ -59,7 +59,7 @@ in
       gst_all_1.gst-plugins-bad     # RTMP, HLS, AV1, MPEG-TS
       gst_all_1.gst-plugins-ugly    # MP3, x264, MPEG-2
       gst_all_1.gst-libav           # FFmpeg bridge (catches everything else)
-      gst_all_1.gst-vaapi           # Hardware decode via VA-API
+      # gst-vaapi removed in GStreamer 1.28; hardware decode now via gst-plugins-bad
     ]
     # VA-API drivers
     ++ lib.optionals (cfg.vaapi && cfg.hardwareDecode) (lib.concatLists [
