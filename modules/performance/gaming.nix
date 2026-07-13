@@ -160,7 +160,6 @@ in
       mangohud        # in-game FPS/GPU overlay
       vkbasalt        # post-processing (CAS sharpening etc.)
       gamemode        # gamemoderun CLI wrapper
-      latencyflex     # GPU latency framework (DLSS Frame Gen alternative)
     ];
 
   };
