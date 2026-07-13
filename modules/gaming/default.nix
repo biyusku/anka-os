@@ -115,7 +115,7 @@ in
         mangohud
         vkbasalt          # Vulkan post-processing (sharpening, SMAA)
         vulkan-tools      # vulkaninfo
-        glxinfo           # OpenGL info
+        mesa-demos        # OpenGL info (glxinfo renamed)
       ]
     ];
 
