@@ -66,7 +66,7 @@ in
       [ libva libva-utils ]
       (lib.optional (gpu.type == "intel" || gpu.type == "amd")
         intel-media-driver)
-            (lib.optional (gpu.type == "nvidia")
+      (lib.optional (gpu.type == "nvidia")
         nvidia-vaapi-driver)
       # Mesa OpenCL / Rusticl for VA-API on AMD
       (lib.optional (gpu.type == "amd")
