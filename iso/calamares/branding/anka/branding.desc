@@ -1,71 +1,60 @@
-# Kiwimi OS — Calamares branding descriptor
+# ANKA OS — Calamares branding descriptor
 # https://github.com/calamares/calamares/blob/calamares/src/branding/default/branding.desc
 
 ---
-componentName: kiwimi
+componentName: anka
 
 # ── Product identity ──────────────────────────────────────────────────────────
 strings:
-  productName:       "Kiwimi OS"
-  shortProductName:  "Kiwimi"
-  version:           "1.0"
-  shortVersion:      "1.0"
-  versionedName:     "Kiwimi OS 1.0"
-  shortVersionedName: "Kiwimi 1.0"
-  bootloaderEntryName: "Kiwimi OS"
-  productUrl:        "https://kiwimi.dev"
-  supportUrl:        "https://github.com/kiwimi-os/kiwimi-os/issues"
-  knownIssuesUrl:    "https://github.com/kiwimi-os/kiwimi-os/issues"
-  releaseNotesUrl:   "https://kiwimi.dev/release-notes"
+  productName:         "ANKA OS"
+  shortProductName:    "ANKA"
+  version:             "1.0"
+  shortVersion:        "1.0"
+  versionedName:       "ANKA OS 1.0"
+  shortVersionedName:  "ANKA 1.0"
+  bootloaderEntryName: "ANKA OS"
+  productUrl:          "https://github.com/anka-os/anka"
+  supportUrl:          "https://github.com/anka-os/anka/issues"
+  knownIssuesUrl:      "https://github.com/anka-os/anka/issues"
+  releaseNotesUrl:     "https://github.com/anka-os/anka/releases"
 
 # ── Welcome page ──────────────────────────────────────────────────────────────
-# Style: true = use Calamares' built-in styled welcome, false = use productWelcome
 welcomeStyleCalamares: true
-
-# Show "What's new" or changelog on welcome page
-welcomeExpandingLogo: false
+welcomeExpandingLogo:  false
 
 # ── Images & assets ────────────────────────────────────────────────────────────
 # All paths are relative to this branding.desc file
 images:
-  productLogo:       "kiwimi-logo.png"
-  productIcon:       "kiwimi-logo.png"
-  productWelcome:    "welcome.png"
+  productLogo:     "logo.png"
+  productIcon:     "logo.png"
+  productWelcome:  "welcome.png"
 
-# ── Color scheme (dark theme) ──────────────────────────────────────────────────
+# ── Color scheme (ANKA dark theme — deep red + gold) ──────────────────────────
 style:
-  # Sidebar gradient: top → bottom
-  sidebarBackground:       "#1a1a2e"
-  sidebarText:             "#e0e0e0"
-  sidebarTextHighlight:    "#00d4aa"
-  sidebarSelect:           "#16213e"
+  sidebarBackground:       "#1a0a0a"
+  sidebarText:             "#e8d5b0"
+  sidebarTextHighlight:    "#c0392b"
+  sidebarSelect:           "#2d1010"
 
-  # Main content area
-  windowBackground:        "#0f0f1a"
-  windowText:              "#e8e8f0"
+  windowBackground:        "#0f0a0a"
+  windowText:              "#e8d5b0"
 
-  # Accent / interactive elements
-  highlight:               "#00d4aa"
-  highlightText:           "#0f0f1a"
+  highlight:               "#c0392b"
+  highlightText:           "#ffffff"
 
-  # Buttons
-  buttonBackground:        "#00d4aa"
-  buttonText:              "#0f0f1a"
-  buttonHoverBackground:   "#00b894"
+  buttonBackground:        "#c0392b"
+  buttonText:              "#ffffff"
+  buttonHoverBackground:   "#96281b"
 
-  # Progress bar
-  progressColor:           "#00d4aa"
-  progressBackground:      "#16213e"
+  progressColor:           "#f39c12"
+  progressBackground:      "#2d1010"
 
-  # Alerts and info boxes
-  alertBackground:         "#16213e"
-  alertText:               "#e0e0e0"
+  alertBackground:         "#2d1010"
+  alertText:               "#e8d5b0"
 
-  # Fonts
-  # Leave empty to use system defaults
   defaultFontFamily:       ""
   defaultFontSize:         ""
 
 # ── Slideshow shown during installation ────────────────────────────────────────
-slideshow:               "show.qml"
-slideshowAPI:            2
+slideshow:     "show.qml"
+slideshowAPI:  2

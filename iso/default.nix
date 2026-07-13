@@ -166,19 +166,22 @@
   };
 
   # ── Desktop shortcut for installer ────────────────────────────────────────
-  environment.etc."skel/Desktop/install-anka.desktop" = {
-    mode = "0755";
-    text = ''
-      [Desktop Entry]
-      Type=Application
-      Name=Install ANKA OS
-      Comment=Install ANKA OS to your computer
-      Exec=/etc/calamares/launch.sh
-      Icon=system-software-install
-      Terminal=false
-      Categories=System;
-    '';
-  };
+  # Place shortcut in anka user's Desktop via activation script
+  system.activationScripts.calamaresDesktopShortcut = ''
+    mkdir -p /home/anka/Desktop
+    cat > /home/anka/Desktop/install-anka.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Install ANKA OS
+Comment=Install ANKA OS to your computer
+Exec=/etc/calamares/launch.sh
+Icon=system-software-install
+Terminal=false
+Categories=System;
+EOF
+    chmod +x /home/anka/Desktop/install-anka.desktop
+    chown -R anka:users /home/anka/Desktop
+  '';
 
   # ── Packages available in the live environment ────────────────────────────
   environment.systemPackages = with pkgs; [
