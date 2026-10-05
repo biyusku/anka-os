@@ -290,8 +290,6 @@ in
     environment.systemPackages = with pkgs; [
       apparmor-utils
       lynis         # security auditing tool
-      chkrootkit    # rootkit detector
-      rkhunter      # rootkit hunter
     ];
 
   };

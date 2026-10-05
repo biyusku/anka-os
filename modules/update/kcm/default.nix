@@ -9,7 +9,7 @@ let
 
     nativeBuildInputs = with pkgs; [
       cmake
-      extra-cmake-modules
+      kdePackages.extra-cmake-modules
       kdePackages.wrapQtAppsHook
     ];
 

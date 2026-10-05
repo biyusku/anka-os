@@ -1,6 +1,7 @@
 # ANKA OS — Live ISO configuration
 # Build: nix build .#packages.x86_64-linux.iso
-{ config, lib, pkgs, modulesPath, inputs, ... }:
+# `gpu` comes from specialArgs in flake.nix ("amd" | "nvidia" | "intel").
+{ config, lib, pkgs, modulesPath, inputs, gpu, ... }:
 
 {
   imports = [
@@ -35,6 +36,9 @@
   };
 
   nixpkgs.config.allowUnfree = true;
+
+  # ── GPU driver variant for this ISO ───────────────────────────────────────
+  anka.gpu.type = gpu;
 
   # ── System locale ──────────────────────────────────────────────────────────
   i18n = {
@@ -80,6 +84,8 @@
       "udev.log_priority=3"
     ];
     loader.timeout = lib.mkForce 3;
+    # New default from NixOS 26.11; safer for pools imported on a live system
+    zfs.forceImportRoot = false;
   };
 
   # ── Display & Wayland ──────────────────────────────────────────────────────
@@ -87,10 +93,10 @@
     sddm = {
       enable    = true;
       wayland.enable = true;
-      autoLogin = {
-        enable = lib.mkForce true;
-        user   = lib.mkForce "anka";
-      };
+    };
+    autoLogin = {
+      enable = lib.mkForce true;
+      user   = lib.mkForce "anka";
     };
     defaultSession = "plasma";
   };
@@ -139,9 +145,10 @@
   environment.etc."calamares/branding/anka".source  = ./calamares/branding/anka;
 
   # ── ISO image settings ─────────────────────────────────────────────────────
+  image.fileName = "anka-${gpu}.iso";
+
   isoImage = {
     volumeID            = "anka-OS";
-    isoName             = "anka.iso";
     squashfsCompression = "zstd -Xcompression-level 19";
     # Include the installer configs in the ISO
     contents = [
@@ -230,6 +237,7 @@ EOF
     printing.enable = true;
 
     # Audio
+    pulseaudio.enable = false; # using pipewire
     pipewire = {
       enable            = true;
       alsa.enable       = true;
@@ -240,7 +248,6 @@ EOF
 
   hardware = {
     bluetooth.enable     = true;
-    pulseaudio.enable    = false; # using pipewire
     graphics.enable      = true;
   };
 

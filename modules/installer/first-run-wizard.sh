@@ -145,7 +145,7 @@ NIXOS_EXTRA_CONFIG="$HOME/.config/anka/extra-packages.nix"
   fi
   if [[ "$WORK_ENABLED" == "true" ]]; then
     echo "    # Productivity"
-    echo "    libreoffice-qt6-fresh"
+    echo "    libreoffice-qt"
     echo "    onlyoffice-bin"
     echo "    thunderbird"
     echo "    obsidian"

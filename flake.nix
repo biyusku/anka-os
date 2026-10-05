@@ -71,7 +71,7 @@
     # Build with: nix build .#packages.x86_64-linux.iso-amd
     nixosConfigurations.anka-iso = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit inputs; };
+      specialArgs = { inherit inputs; gpu = "amd"; };
       modules = [
         chaotic.nixosModules.default
         ./iso/default.nix

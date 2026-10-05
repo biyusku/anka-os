@@ -31,7 +31,7 @@ in
     # Make the wizard script available system-wide
     environment.systemPackages = [
       firstRunWizard
-      pkgs.kdialog   # Qt dialog toolkit used by the wizard
+      pkgs.kdePackages.kdialog   # Qt dialog toolkit used by the wizard
     ];
 
     # ── Systemd user service ────────────────────────────────────────────────

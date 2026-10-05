@@ -84,10 +84,10 @@ in
           libpulseaudio
           libvorbis
           stdenv.cc.cc.lib
-          xorg.libXcursor
-          xorg.libXi
-          xorg.libXinerama
-          xorg.libXScrnSaver
+          libxcursor
+          libxi
+          libxinerama
+          libxscrnsaver
         ];
       };
       extraCompatPackages = with pkgs; [
@@ -115,7 +115,7 @@ in
         mangohud
         vkbasalt          # Vulkan post-processing (sharpening, SMAA)
         vulkan-tools      # vulkaninfo
-        glxinfo           # OpenGL info
+        mesa-demos        # glxinfo, eglinfo (OpenGL info)
       ]
     ];
 

@@ -147,7 +147,7 @@ in
 
       # Misc desktop
       firefox
-      libreoffice-qt6-fresh
+      libreoffice-qt
     ];
 
     # ── Qt / GTK Wayland environment ──────────────────────────────────────

@@ -100,7 +100,7 @@ in
 
       # Core GUI apps
       [
-        libreoffice-qt6-fresh
+        libreoffice-qt
         gimp
         vlc
         signal-desktop

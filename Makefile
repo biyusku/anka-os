@@ -1,4 +1,4 @@
-# Kiwimi OS — Build System
+# ANKA OS — Build System
 # Usage: make <target>
 
 .PHONY: build-iso test-iso rebuild update gc check fmt help
@@ -8,7 +8,7 @@
 build-iso:
 	nix build .#packages.x86_64-linux.iso --out-link result-iso
 	@echo ""
-	@echo "ISO built: $$(readlink result-iso)/iso/kiwimi.iso"
+	@echo "ISO built: $$(readlink result-iso)/iso/anka-amd.iso"
 
 ## Test the ISO in QEMU (requires KVM + 4 GB RAM)
 test-iso: result-iso
@@ -21,14 +21,14 @@ test-iso: result-iso
 	  -display gtk,gl=on \
 	  -device virtio-net-pci,netdev=net0 \
 	  -netdev user,id=net0 \
-	  -cdrom result-iso/iso/kiwimi.iso \
+	  -cdrom result-iso/iso/anka-amd.iso \
 	  -boot d \
 	  -bios /run/current-system/firmware/bios.bin 2>/dev/null || \
 	qemu-system-x86_64 \
 	  -enable-kvm \
 	  -m 4G \
 	  -smp 2 \
-	  -cdrom result-iso/iso/kiwimi.iso \
+	  -cdrom result-iso/iso/anka-amd.iso \
 	  -boot d
 
 ## Test the ISO with UEFI firmware (ovmf)
@@ -39,21 +39,21 @@ test-iso-uefi: result-iso
 	  -smp 2 \
 	  -cpu host \
 	  -bios $$(nix-build '<nixpkgs>' -A OVMF.fd --no-out-link)/FV/OVMF.fd \
-	  -cdrom result-iso/iso/kiwimi.iso \
+	  -cdrom result-iso/iso/anka-amd.iso \
 	  -boot d
 
 # ── System rebuild ────────────────────────────────────────────────────────────
 ## Rebuild and switch to the new configuration on the current machine
 rebuild:
-	sudo nixos-rebuild switch --flake .#kiwimi
+	sudo nixos-rebuild switch --flake .#anka
 
 ## Rebuild and boot into the new generation on next reboot
 rebuild-boot:
-	sudo nixos-rebuild boot --flake .#kiwimi
+	sudo nixos-rebuild boot --flake .#anka
 
 ## Test build without switching (dry-run)
 rebuild-dry:
-	nixos-rebuild dry-build --flake .#kiwimi
+	nixos-rebuild dry-build --flake .#anka
 
 # ── Flake maintenance ─────────────────────────────────────────────────────────
 ## Update all flake inputs to their latest commits
@@ -101,7 +101,7 @@ fmt:
 # ── Help ──────────────────────────────────────────────────────────────────────
 help:
 	@echo ""
-	@echo "  Kiwimi OS Build System"
+	@echo "  ANKA OS Build System"
 	@echo "  ══════════════════════"
 	@echo ""
 	@echo "  ISO"
