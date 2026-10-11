@@ -45,10 +45,14 @@ in
     };
 
     governor = lib.mkOption {
-      type    = lib.types.enum [ "schedutil" "ondemand" "powersave" "performance" "conservative" ];
-      default = "schedutil";
+      type    = lib.types.enum [ "auto" "schedutil" "ondemand" "powersave" "performance" "conservative" ];
+      default = "auto";
       description = ''
         CPU frequency scaling governor.
+        'auto' leaves it to the CPU driver and Plasma's power profiles
+        (power-profiles-daemon). Modern Intel (intel_pstate) and AMD
+        (amd-pstate) drivers only offer 'performance' and 'powersave', so
+        forcing another governor fails there.
         'schedutil' is the recommended default; gaming.nix overrides to 'performance'
         when anka.performance.gaming.enable is true and the game is active.
       '';
@@ -112,14 +116,9 @@ in
     # ── Kernel sysctl tuning ─────────────────────────────────────────────────
     boot.kernel.sysctl = {
       # Memory
-      "vm.swappiness"             = 10;
       "vm.dirty_ratio"            = 15;
       "vm.dirty_background_ratio" = 5;
       "vm.vfs_cache_pressure"     = 50;
-
-      # Transparent Huge Pages
-      "kernel.mm.transparent_hugepage.enabled" = cfg.thp;
-      "kernel.mm.transparent_hugepage.defrag"  = "defer+madvise";
 
       # Network performance
       "net.core.netdev_max_backlog"   = 16384;
@@ -130,12 +129,23 @@ in
       # File descriptor limits
       "fs.file-max"    = 2097152;
       "fs.inotify.max_user_watches" = 524288;
+    }
+    # Swap: zram is RAM-speed, so swap to it eagerly (Arch wiki "zram",
+    # as on Pop!_OS and ChromeOS); without zram keep disk swap a last resort.
+    // (if cfg.zram.enable then {
+      "vm.swappiness"                = 180;
+      "vm.page-cluster"              = 0;
+      "vm.watermark_boost_factor"    = 0;
+      "vm.watermark_scale_factor"    = 125;
+    } else {
+      "vm.swappiness"                = 10;
+    });
 
-      # CachyOS / BORE scheduler hint
-      "kernel.sched_latency_ns"       = 4000000;
-      "kernel.sched_migration_cost_ns" = 500000;
-      "kernel.sched_min_granularity_ns" = 500000;
-    };
+    # Transparent Huge Pages: mode via the kernel command line (below);
+    # defrag lives in sysfs, not sysctl.
+    systemd.tmpfiles.rules = [
+      "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+    ];
 
     # ── zram compressed swap ─────────────────────────────────────────────────
     zramSwap = lib.mkIf cfg.zram.enable {
@@ -146,22 +156,23 @@ in
     };
 
     # ── CPU governor ─────────────────────────────────────────────────────────
-    powerManagement.cpuFreqGovernor = cfg.governor;
+    powerManagement.cpuFreqGovernor = lib.mkIf (cfg.governor != "auto") cfg.governor;
 
     # ── I/O schedulers via udev rules ────────────────────────────────────────
     services.udev.extraRules = ''
+      # Whole disks only (partitions have no queue/scheduler).
       # NVMe — no scheduler (drive-internal NCQ is smarter)
-      ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
+      ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
 
       # SATA / HDD
-      ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{rotational}=="0", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
-      ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{rotational}=="1", ATTR{queue/scheduler}="${cfg.ioScheduler.sata}"
+      ACTION=="add|change", KERNEL=="sd[a-z]*", ENV{DEVTYPE}=="disk", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
+      ACTION=="add|change", KERNEL=="sd[a-z]*", ENV{DEVTYPE}=="disk", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="${cfg.ioScheduler.sata}"
 
       # USB mass storage
-      ACTION=="add|change", KERNEL=="sd[a-z]*", SUBSYSTEMS=="usb", ATTR{queue/scheduler}="${cfg.ioScheduler.usb}"
+      ACTION=="add|change", KERNEL=="sd[a-z]*", ENV{DEVTYPE}=="disk", SUBSYSTEMS=="usb", ATTR{queue/scheduler}="${cfg.ioScheduler.usb}"
 
       # eMMC (common on budget laptops)
-      ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
+      ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="${cfg.ioScheduler.nvme}"
     '';
 
     # ── earlyoom ─────────────────────────────────────────────────────────────
@@ -169,11 +180,13 @@ in
       enable            = true;
       freeMemThreshold  = cfg.earlyoom.freeMemThresholdPercent;
       freeSwapThreshold = cfg.earlyoom.freeSwapThresholdPercent;
-      extraArgs         = [
-        "--prefer '^(Web Content|chromium|firefox)$'"
-        "--avoid '^(kwin_wayland|plasmashell|systemd|anka)$'"
-        "-n"   # send SIGTERM first, then SIGKILL after 1 s
+      # One argv element per word: the module shell-escapes each element.
+      extraArgs = [
+        "--prefer" "^(Web Content|chromium|firefox)$"
+        "--avoid"  "^(kwin_wayland|plasmashell|systemd|anka-ai-daemon)$"
       ];
+      # Tell the user which app was closed to free memory.
+      enableNotifications = true;
     };
 
     # ── sched_ext scheduler (kernel ≥ 6.12) ──────────────────────────────────

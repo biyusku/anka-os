@@ -96,7 +96,7 @@
         memoryPercent = 50;
       };
       scheduler      = "scx_lavd";  # Valve's Steam Deck scheduler
-      governor       = "schedutil";
+      governor       = "auto";      # CPU driver + Plasma power profiles
       thp            = "madvise";
       enableEarlyoom = true;
       gaming = {

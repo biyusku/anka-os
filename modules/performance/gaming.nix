@@ -37,8 +37,7 @@ in
       default = true;
       description = ''
         Enable NVIDIA-specific gaming tweaks:
-        - Force Composition Pipeline disabled (lower latency)
-        - PowerMizer to prefer maximum performance
+        - PowerMizer prefers maximum performance while GameMode is active
         - nvidia-persistenced kept running
         Only applied when anka.gpu.type = "nvidia".
       '';
@@ -49,8 +48,7 @@ in
       default = true;
       description = ''
         Enable AMD-specific gaming tweaks:
-        - amdgpu.ppfeaturemask=0xffffffff (unlock all power features)
-        - Set GPU/VRAM clocks to max via coreclk when GameMode activates
+        - GPU performance level "high" while GameMode is active
         Only applied when anka.gpu.type = "amd".
       '';
     };
@@ -94,9 +92,10 @@ in
             nv_mem_clock_mhz_offset   = 0;
           })
         ];
+        # Pause KDE's file indexer while a game runs (GameMode runs these as the user).
         custom = lib.mkIf cfg.gaming.gameModeReaper {
-          start = "${pkgs.systemd}/bin/systemctl stop --no-block tracker-store.service || true";
-          end   = "${pkgs.systemd}/bin/systemctl start --no-block tracker-store.service || true";
+          start = "${pkgs.kdePackages.baloo}/bin/balooctl6 suspend";
+          end   = "${pkgs.kdePackages.baloo}/bin/balooctl6 resume";
         };
       };
     };
@@ -122,36 +121,18 @@ in
 
     users.groups.anka-gamemode = {};
 
-    # ── NVIDIA persistenced (keeps GPU init warm) ─────────────────────────────
-    # hardware.nvidia.powerManagement is owned by modules/gpu.
-    systemd.services.nvidia-persistenced = lib.mkIf (gpu.type == "nvidia" && cfg.gaming.nvidiaTweaks) {
-      description   = "NVIDIA Persistence Daemon";
-      wantedBy      = [ "multi-user.target" ];
-      after         = [ "systemd-modules-load.service" ];
-      serviceConfig = {
-        Type      = "forking";
-        Restart   = "always";
-        ExecStart = "${config.boot.kernelPackages.nvidiaPackages.stable.bin}/bin/nvidia-persistenced --verbose";
-        ExecStop  = "${pkgs.procps}/bin/kill -SIGINT $MAINPID";
-      };
-    };
+    # ── NVIDIA persistence daemon (keeps the GPU initialised) ────────────────
+    # NixOS' option runs the daemon of the driver actually in use.
+    # (hardware.nvidia.powerManagement is owned by modules/gpu.)
+    hardware.nvidia.nvidiaPersistenced = lib.mkIf (gpu.type == "nvidia" && cfg.gaming.nvidiaTweaks) true;
 
-    # ── AMD amdgpu feature unlock ─────────────────────────────────────────────
-    boot.extraModprobeConfig = lib.mkIf (gpu.type == "amd" && cfg.gaming.amdTweaks) ''
-      options amdgpu ppfeaturemask=0xffffffff
-    '';
+    # No amdgpu ppfeaturemask=0xffffffff: it unlocks overclocking, taints
+    # the kernel and is known to destabilise some cards. Tools like LACT
+    # document how to enable it for users who want to overclock.
 
-    # ── PipeWire low-latency profile (activated by GameMode) ─────────────────
-    # PipeWire itself is configured in modules/desktop; here we only drop
-    # the gaming profile that GameMode's custom start/end scripts activate.
-    services.pipewire.extraConfig.pipewire."99-gaming" = {
-      "context.properties" = {
-        "default.clock.rate"        = 48000;
-        "default.clock.quantum"     = 64;
-        "default.clock.min-quantum" = 32;
-        "default.clock.max-quantum" = 512;
-      };
-    };
+    # No always-on low-latency PipeWire profile: a 64-sample quantum for
+    # every app costs CPU and causes crackling on older machines; the
+    # desktop default (modules/desktop) stays in effect.
 
     # ── Useful gaming tools ───────────────────────────────────────────────────
     environment.systemPackages = with pkgs; [
