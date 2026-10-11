@@ -61,7 +61,9 @@ in
           FallbackDNS     = lib.concatStringsSep " " cfg.dns;
           DNSStubListener = "yes";
           LLMNR           = "no";
-          MulticastDNS    = if cfg.mdns then "yes" else "no";
+          # Avahi answers mDNS (below; CUPS printer discovery uses it).
+          # Two responders on port 5353 conflict.
+          MulticastDNS    = "no";
         };
       };
     };

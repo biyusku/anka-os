@@ -69,11 +69,9 @@ in
     environment.systemPackages = with pkgs; lib.concatLists [
       (lib.optional cfg.orca            orca)
       (lib.optional cfg.orca            espeak-ng)           # default TTS backend for Orca
-      (lib.optional cfg.orca            python3Packages.speechd) # speech-dispatcher Python bindings
       (lib.optional cfg.brailleDisplay  brltty)
       (lib.optional cfg.onScreenKeyboard maliit-keyboard)
       (lib.optional cfg.highContrast    hicolor-icon-theme)
-      [ speech-dispatcher ]    # universal speech synthesis daemon
     ];
 
     # ── speech-dispatcher (Orca TTS backend) ─────────────────────────────────
@@ -98,32 +96,18 @@ in
       hinting.enable = lib.mkDefault true;
     };
 
-    # ── KDE accessibility configuration ──────────────────────────────────────
-    # Deploy a kwriteconfig5 activation script so KDE picks up a11y settings.
-    system.activationScripts.ankaA11yKde = lib.mkIf (cfg.largeFonts || cfg.highContrast) {
-      deps = [];
-      text = ''
-        # Only run if KDE config dir exists (i.e. user has logged in once)
-        for USER_HOME in /home/*; do
-          KDE_CONFIG="$USER_HOME/.config"
-          [ -d "$KDE_CONFIG" ] || continue
-
-          ${lib.optionalString cfg.largeFonts ''
-            # Set KDE global DPI
-            ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 \
-              --file "$KDE_CONFIG/kcmfonts" \
-              --group General --key forceFontDPI ${toString cfg.dpi}
-          ''}
-
-          ${lib.optionalString cfg.highContrast ''
-            # Enable KDE high contrast mode
-            ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 \
-              --file "$KDE_CONFIG/kdeglobals" \
-              --group KDE --key contrastLevel 7
-          ''}
-        done
-      '';
-    };
+    # ── KDE accessibility defaults ────────────────────────────────────────────
+    # System-wide defaults in /etc/xdg apply to every user (their own
+    # settings still win). Writing into home directories as root would
+    # leave root-owned files the user can no longer change.
+    environment.etc."xdg/kcmfonts".text = lib.mkIf cfg.largeFonts ''
+      [General]
+      forceFontDPI=${toString cfg.dpi}
+    '';
+    environment.etc."xdg/kdeglobals".text = lib.mkIf cfg.highContrast ''
+      [KDE]
+      contrast=10
+    '';
 
     # ── GTK high-contrast theme ───────────────────────────────────────────────
     environment.etc."gtk-3.0/settings.ini".text = lib.mkIf cfg.highContrast ''

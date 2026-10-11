@@ -96,13 +96,13 @@ in
       };
 
       policy = lib.mkOption {
-        type    = lib.types.enum [ "allow-all" "block-all" "interactive" ];
-        default = "interactive";
+        type    = lib.types.enum [ "allow" "block" "reject" ];
+        default = "block";
         description = ''
-          USBGuard default policy for newly attached devices.
-          allow-all   — same as disabled (testing only).
-          block-all   — block everything not explicitly allowed.
-          interactive — prompt the user via the USBGuard daemon notify.
+          What USBGuard does with a device no rule allows:
+          allow  — allow it (testing only).
+          block  — block it; allow it later with `usbguard allow-device`.
+          reject — remove it from the system.
         '';
       };
     };
@@ -165,15 +165,13 @@ in
     services.fail2ban = lib.mkIf cfg.fail2ban.enable {
       enable  = true;
 
-      jails.sshd = ''
-        enabled  = true
-        port     = ${toString cfg.firewall.sshPort}
-        filter   = sshd
-        logpath  = /var/log/auth.log %(journalmatch)s
-        maxretry = ${toString cfg.fail2ban.maxRetries}
-        findtime = ${cfg.fail2ban.findtime}
-        bantime  = ${cfg.fail2ban.bantime}
-      '';
+      maxretry = cfg.fail2ban.maxRetries;
+      bantime  = cfg.fail2ban.bantime;
+      # NixOS already defines the sshd jail (reading the journal); tune it.
+      jails.sshd.settings = {
+        port     = toString cfg.firewall.sshPort;
+        findtime = cfg.fail2ban.findtime;
+      };
     };
 
     # ── USBGuard ──────────────────────────────────────────────────────────────
@@ -276,9 +274,9 @@ in
         LoginGraceTime                 = 30;
         ClientAliveInterval            = 300;
         ClientAliveCountMax            = 2;
-        Ciphers                        = "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com";
-        MACs                           = "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com";
-        KexAlgorithms                  = "curve25519-sha256,curve25519-sha256@libssh.org";
+        Ciphers       = [ "chacha20-poly1305@openssh.com" "aes256-gcm@openssh.com" ];
+        Macs          = [ "hmac-sha2-512-etm@openssh.com" "hmac-sha2-256-etm@openssh.com" ];
+        KexAlgorithms = [ "curve25519-sha256" "curve25519-sha256@libssh.org" ];
       };
       ports = [ cfg.firewall.sshPort ];
     };

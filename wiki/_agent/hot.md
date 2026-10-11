@@ -30,6 +30,12 @@ Son güncelleme: 2026-10-11
 - Görünüm (`modules/branding`): ANKA duvar kâğıdı (artwork/gen_wallpaper.py), logo,
   "ANKA OS" adı + Plymouth logosu, Breeze Dark + kırmızı vurgu, SDDM/kilit ekranı arka planı.
 
+- Performans: earlyoom hiç çalışmıyordu (argüman hatası) → düzeltildi; zram swappiness 180;
+  governor "auto"; olmayan sysctl'ler ve her zaman açık 64-quantum PipeWire kaldırıldı.
+- İsteğe bağlı özellikler tek tek açılıp değerlendirildi: erişilebilirlik, USBGuard, SSH,
+  fail2ban açıldığında sistem derlenmiyordu → düzeltildi. Test: extendModules ile
+  `anka.<seçenek> = …` ekleyip toplevel.drvPath değerlendir.
+
 ## Sıradaki işler
 
 - AI: daemon çalışıyor ama intent/router/memory/voice/confirmation_gate hâlâ bağlı değil;
