@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import traceback
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -19,7 +19,7 @@ log = logging.getLogger("anka.mcp.network")
 
 mcp = FastMCP(
     name="anka-network",
-    description="NetworkManager-based network status and control",
+    instructions="NetworkManager-based network status and control",
 )
 
 # ---------------------------------------------------------------------------
@@ -172,7 +172,7 @@ def list_wifi_networks() -> list[dict[str, Any]]:
         "openWorldHint": False,
     }
 )
-def connect_wifi(ssid: str, password: Optional[str] = None) -> dict[str, Any]:
+def connect_wifi(ssid: str, password: str | None = None) -> dict[str, Any]:
     """
     Connect to a Wi-Fi network.
 
@@ -329,8 +329,8 @@ def ping(host: str) -> dict[str, Any]:
     )
     output = result.stdout
 
-    avg_ms: Optional[float] = None
-    packet_loss: Optional[str] = None
+    avg_ms: float | None = None
+    packet_loss: str | None = None
 
     for line in output.splitlines():
         if "avg" in line or "rtt" in line:

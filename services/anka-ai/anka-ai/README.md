@@ -1,89 +1,69 @@
-# anka-ai — Phase 3B AI Layer
+# anka-ai — ANKA OS AI assistant
 
-Core AI orchestration daemon and MCP server suite for ANKA OS (NixOS).
-
-## What it does
-
-The daemon receives natural language queries over a Unix socket
-(`/run/anka-ai/daemon.sock`), classifies intent, routes to the right model,
-and returns structured responses. It also registers on the session D-Bus as
-`org.anka.AI` for desktop integration.
+## What runs today
 
 ```
-Query → IntentClassifier → RequestRouter → LiteLLM (local/cloud) → Response
-                                         ↘ MCP tools (via FastMCP servers)
+anka-ai "soru"  ──D-Bus──▶  anka-ai-daemon (org.anka.AI, session bus)  ──HTTP──▶  Ollama (local model)
 ```
 
-## Architecture
-
-| Component | File | Role |
+| Piece | File | Notes |
 |---|---|---|
-| Daemon | `daemon.py` | asyncio server, conversation manager, orchestrator |
-| Router | `router.py` | PII detection, complexity classification, routing |
-| Memory | `memory.py` | SQLite FTS5 long-term memory |
-| Intent | `intent.py` | Two-tier intent classifier (keywords + Haiku) |
-| D-Bus bridge | `dbus_bridge.py` | org.anka.AI D-Bus service |
-| Confirmation gate | `confirmation_gate.py` | Pre-action confirmation + snapshotting |
-| Voice pipeline | `voice_pipeline.py` | faster-whisper STT + Kokoro/espeak TTS |
+| Daemon | `daemon.py` | systemd user unit `anka-ai`, logs to the user journal |
+| CLI / client | `dbus_bridge.py` | `anka-ai` (status) and `anka-ai "question"` |
+| MCP servers | `mcp-servers/` | packaged as `anka-mcp-<name>` (see below) |
 
-## MCP Servers
+The daemon never blocks: if the model (`anka.ai.localModel`, default
+`qwen2.5:7b`) is missing, the first question starts downloading it in the
+background and the answer says so. Status queries never start a download.
+`AI_MODE=none` in `~/.config/anka/setup.conf` (first-run wizard) turns the
+assistant off.
 
-Each server runs as a sandboxed FastMCP process under its own systemd DynamicUser.
+### D-Bus interface
 
-| Server | Port | Description |
-|---|---|---|
-| `mcp_filesystem.py` | 11500 | File read/write with path sandboxing |
-| `mcp_desktop.py` | 11501 | KWin/KDE desktop control |
-| `mcp_network.py` | 11502 | NetworkManager Wi-Fi/VPN |
-| `mcp_process.py` | 11503 | Process listing and termination |
-| `mcp_audio.py` | 11504 | PipeWire/PulseAudio audio control |
-| `mcp_system.py` | 11505 | Systemd service management |
-| `mcp_diagnostics.py` | 11506 | Read-only system diagnostics |
-| `mcp_package.py` | 11507 | Nix package management |
-
-## Routing Logic
+Service `org.anka.AI`, object `/org/anka/AI`, interface `org.anka.AI`:
 
 ```
-Request
-  ↓
-PII detected? → YES → local (Ollama qwen2.5:7b)
-  ↓ NO
-complexity = simple/medium → local
-complexity = complex       → cloud (claude-sonnet-4-6)
+Ask(question: s) → s           JSON {success, response | error, downloading}
+GetStatus() → s                JSON {ready, reason, downloading, model, ...}
+ClearHistory() → b
+SetModel(model: s) → b         pulled on the next question if missing
+signal StatusChanged(s)
 ```
-
-PII patterns: SSN, email, phone, credit card, passwords, home directory paths.
-
-## D-Bus Interface
-
-Service: `org.anka.AI` — object path `/org/anka/AI`
-
-```
-ProcessQuery(query: str, context: str) → str  (JSON response)
-GetStatus()                             → str  (JSON stats)
-SetUserPreference(key: str, val: str)   → bool
-GetConversationSummary()                → str
-Shutdown()                              → void
-```
-
-## Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | — | Required for cloud routing |
-| `anka_WHISPER_MODEL` | `base` | Whisper model size |
-| `anka_WHISPER_DEVICE` | `auto` | `cpu`, `cuda`, or `auto` |
-| `anka_KOKORO_URL` | `http://127.0.0.1:5002` | Kokoro TTS server URL |
-| `anka_MEMORY_DB` | `/var/lib/anka-ai/memory.db` | SQLite memory path |
-
-## Running
-
-The daemon is managed by `systemd.services.anka-ai-daemon` defined in
-`modules/ai/default.nix`. To run manually for development:
 
 ```bash
-cd services/anka-ai
-pip install -e ".[dev]"
-export ANTHROPIC_API_KEY=sk-ant-...
-python daemon.py
+busctl --user call org.anka.AI /org/anka/AI org.anka.AI Ask s "Merhaba"
+journalctl --user -u anka-ai
+```
+
+## MCP servers
+
+Eight stdio servers built on FastMCP 3, installed as commands and listed in
+`/etc/anka/mcp/servers.json` (standard `mcpServers` format, usable from MCP
+clients such as Claude Desktop or Claude Code):
+
+| Command | Tools |
+|---|---|
+| `anka-mcp-filesystem` | read/write/list/search files, sandboxed to `$HOME` and `/tmp` (`~/.config/anka/mcp-roots.json`) |
+| `anka-mcp-desktop` | windows, keys, screenshots, brightness (KWin) |
+| `anka-mcp-network` | Wi-Fi, VPN, ping (NetworkManager) |
+| `anka-mcp-process` | list / inspect / signal processes |
+| `anka-mcp-audio` | volume, mute, devices (PipeWire) |
+| `anka-mcp-system` | systemd services, hostname, timezone, shutdown |
+| `anka-mcp-diagnostics` | logs, disks, memory, temperatures (read-only) |
+| `anka-mcp-package` | search / install / remove Nix packages |
+
+## Planned, not wired yet
+
+`intent.py` (intent classification), `router.py` (PII-aware local/cloud
+routing), `memory.py` (SQLite long-term memory), `confirmation_gate.py`
+(confirm destructive actions) and `voice_pipeline.py` (Whisper / TTS) are the
+next layer. Their dependencies are the `assistant` extra in `pyproject.toml`;
+the daemon does not import them yet.
+
+## Development
+
+```bash
+nix build .#checks.x86_64-linux.anka-ai    # daemon + CLI (import-checked)
+nix build .#checks.x86_64-linux.anka-mcp   # MCP servers (load-checked)
+ruff check --config pyproject.toml daemon.py dbus_bridge.py mcp-servers/
 ```

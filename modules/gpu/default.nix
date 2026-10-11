@@ -60,25 +60,16 @@ in
       hardware.graphics = {
         enable      = true;
         enable32Bit = true;
-        extraPackages = with pkgs; [
-          rocmPackages.clr # ROCm OpenCL (for Ollama GPU acceleration)
-          # Mesa (RADV Vulkan + radeonsi VA-API) is pulled in automatically
-          # by hardware.graphics.enable — no extra entries needed here
-        ];
+        # Mesa (RADV Vulkan + radeonsi VA-API) comes with hardware.graphics.
+        # No ROCm here: it is several GB, and Ollama uses Vulkan (modules/ai).
+        extraPackages = [ ];
         # RADV (Vulkan) is provided by Mesa by default; no amdvlk needed
         extraPackages32 = with pkgs; [ ];
       };
 
-      # ROCm HIP for GPU compute (Ollama, etc.)
       environment.systemPackages = with pkgs; [
         radeontop       # AMD GPU monitor
-        rocmPackages.rocm-smi
       ];
-
-      environment.variables = {
-        ROC_ENABLE_PRE_VEGA = "1";          # enable pre-Vega ROCm support
-        HSA_OVERRIDE_GFX_VERSION = lib.mkDefault "";
-      };
     })
 
     # ── NVIDIA ────────────────────────────────────────────────────────────
@@ -120,7 +111,8 @@ in
 
       environment.systemPackages = with pkgs; [
         nvtopPackages.nvidia              # NVIDIA GPU monitor
-        cudaPackages.cudatoolkit          # CUDA tools
+        # No cudaPackages.cudatoolkit: a multi-GB developer toolkit that
+        # games and the desktop don't use.
       ];
 
       # NVIDIA Wayland environment variables

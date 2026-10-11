@@ -9,12 +9,13 @@ when D-Bus is unavailable.
 from __future__ import annotations
 
 import base64
+import importlib.util
 import logging
 import os
 import subprocess
 import tempfile
 import traceback
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -22,24 +23,20 @@ log = logging.getLogger("anka.mcp.desktop")
 
 mcp = FastMCP(
     name="anka-desktop",
-    description="KDE Plasma desktop control: windows, audio, brightness, input",
+    instructions="KDE Plasma desktop control: windows, audio, brightness, input",
 )
 
 # ---------------------------------------------------------------------------
 # D-Bus helpers
 # ---------------------------------------------------------------------------
 
-_DBUS_AVAILABLE: Optional[bool] = None
+_DBUS_AVAILABLE: bool | None = None
 
 
 def _dbus_available() -> bool:
     global _DBUS_AVAILABLE
     if _DBUS_AVAILABLE is None:
-        try:
-            import dbus  # type: ignore[import]
-            _DBUS_AVAILABLE = True
-        except ImportError:
-            _DBUS_AVAILABLE = False
+        _DBUS_AVAILABLE = importlib.util.find_spec("dbus") is not None
     return _DBUS_AVAILABLE
 
 

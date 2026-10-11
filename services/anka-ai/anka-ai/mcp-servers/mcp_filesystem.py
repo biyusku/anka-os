@@ -13,7 +13,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -25,7 +25,7 @@ log = logging.getLogger("anka.mcp.filesystem")
 
 mcp = FastMCP(
     name="anka-filesystem",
-    description="Secure filesystem operations with sandboxed root enforcement",
+    instructions="Secure filesystem operations with sandboxed root enforcement",
 )
 
 # ---------------------------------------------------------------------------

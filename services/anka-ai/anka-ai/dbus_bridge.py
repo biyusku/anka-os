@@ -5,10 +5,11 @@ Client library for interacting with the ANKA AI daemon via D-Bus.
 Used by desktop applications, KDE plasmoids, and scripts.
 """
 
-import dbus
 import json
 import logging
 from typing import Any
+
+import dbus
 
 logger = logging.getLogger("anka-dbus-bridge")
 
@@ -151,20 +152,24 @@ def get_anka_status() -> dict[str, Any]:
     return bridge.get_status()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """`anka-ai` — ask ANKA AI from a terminal; without arguments, show its status."""
     import sys
 
     logging.basicConfig(level=logging.WARNING)
 
     if len(sys.argv) < 2:
         status = get_anka_status()
-        print("ANKA AI Status:")
+        print("ANKA AI")
         print(f"  Ready: {status.get('ready', False)}")
+        if status.get("reason"):
+            print(f"  {status['reason']}")
         print(f"  Model: {status.get('model', 'unknown')}")
-        print(f"  Service: {status.get('service', DBUS_SERVICE)}")
-        print(f"  Version: {status.get('version', 'unknown')}")
-    else:
-        question = " ".join(sys.argv[1:])
-        print(f"Asking ANKA AI: {question}")
-        response = ask_anka(question)
-        print(f"\nANKA: {response}")
+        return
+
+    response = ask_anka(" ".join(sys.argv[1:]))
+    print(response)
+
+
+if __name__ == "__main__":
+    main()

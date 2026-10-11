@@ -19,7 +19,7 @@ log = logging.getLogger("anka.mcp.process")
 
 mcp = FastMCP(
     name="anka-process",
-    description="Process listing, resource stats, and controlled process termination",
+    instructions="Process listing, resource stats, and controlled process termination",
 )
 
 # ---------------------------------------------------------------------------
@@ -126,15 +126,15 @@ def kill_process(pid: int, signal: str = "SIGTERM") -> dict[str, Any]:
     Returns:
         Dict with 'sent', 'pid', 'signal', 'name'.
     """
-    _ALLOWED: dict[str, _signal.Signals] = {
+    allowed: dict[str, _signal.Signals] = {
         "SIGTERM": _signal.SIGTERM,
         "SIGKILL": _signal.SIGKILL,
         "SIGINT": _signal.SIGINT,
         "SIGHUP": _signal.SIGHUP,
     }
-    sig = _ALLOWED.get(signal.upper())
+    sig = allowed.get(signal.upper())
     if sig is None:
-        raise ValueError(f"Unsupported signal '{signal}'. Allowed: {list(_ALLOWED)}")
+        raise ValueError(f"Unsupported signal '{signal}'. Allowed: {list(allowed)}")
 
     if pid in (0, 1):
         raise PermissionError("Refusing to signal PID 0 or 1")

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import traceback
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -19,7 +19,7 @@ log = logging.getLogger("anka.mcp.system")
 
 mcp = FastMCP(
     name="anka-system",
-    description="Systemd service control, timezone/hostname management, and system info",
+    instructions="Systemd service control, timezone/hostname management, and system info",
 )
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,8 @@
+# ANKA OS — AI assistant
+#
+# Ollama runs the local model; the anka-ai daemon (org.anka.AI on the
+# session bus) answers questions with it. `anka-ai "question"` asks from a
+# terminal. The model is downloaded the first time someone asks, not at boot.
 { config, pkgs, lib, ... }:
 
 with lib;
@@ -5,34 +10,41 @@ with lib;
 let
   cfg = config.anka.ai;
 
-  # ── Python package ────────────────────────────────────────────────────────
   anka-ai-pkg = pkgs.python3Packages.buildPythonApplication {
     pname   = "anka-ai";
     version = "0.3.0";
-    format  = "pyproject";
+    pyproject = true;
 
     src = ../../services/anka-ai/anka-ai;
 
-    nativeBuildInputs = with pkgs.python3Packages; [ hatchling ];
+    build-system = with pkgs.python3Packages; [ hatchling ];
 
-    propagatedBuildInputs = with pkgs.python3Packages; [
-      anthropic
-      litellm
-      fastmcp
-      dasbus
-      dbus-python
-      pygobject3
-      psutil
-      faster-whisper
-      pyaudio
+    nativeBuildInputs = with pkgs; [
+      gobject-introspection
+      wrapGAppsNoGuiHook
     ];
 
-    pythonImportsCheck = [ "daemon" ];
+    buildInputs = [ pkgs.glib ];
+
+    dependencies = with pkgs.python3Packages; [
+      dbus-python
+      pygobject3
+      requests
+    ];
+
+    # One wrapper for both: python + GI typelib paths.
+    dontWrapGApps = true;
+    preFixup = ''
+      makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
+    '';
+
+    pythonImportsCheck = [ "daemon" "dbus_bridge" ];
 
     meta = {
-      description = "ANKA OS AI orchestration daemon";
+      description = "ANKA OS AI assistant daemon";
       license     = lib.licenses.mit;
       platforms   = lib.platforms.linux;
+      mainProgram = "anka-ai";
     };
   };
 in
@@ -45,7 +57,7 @@ in
     localModel = mkOption {
       type = types.str;
       default = "qwen2.5:7b";
-      description = "Default Ollama model for ANKA AI";
+      description = "Ollama model ANKA AI answers with (downloaded on first use).";
     };
 
     port = mkOption {
@@ -54,22 +66,28 @@ in
       description = "Ollama service port";
     };
 
+    acceleration = mkOption {
+      type = types.enum [ "auto" "cpu" "vulkan" "rocm" "cuda" ];
+      default = "auto";
+      description = ''
+        How Ollama runs the model.
+        auto   — Vulkan when ANKA drives a GPU (anka.gpu.type), CPU otherwise.
+        vulkan — any AMD, NVIDIA or Intel GPU; prebuilt.
+        rocm   — AMD ROCm; prebuilt but several GB larger.
+        cuda   — NVIDIA CUDA; not in the binary cache, compiles on the machine.
+      '';
+    };
+
     enableVoice = mkOption {
       type = types.bool;
       default = false;
-      description = "Enable voice input/output (Whisper STT + Kokoro TTS)";
+      description = "Reserved for voice input/output (Whisper STT + Kokoro TTS); not wired yet.";
     };
 
     whisperModel = mkOption {
       type = types.str;
       default = "base";
-      description = "Whisper model size (tiny, base, small, medium, large)";
-    };
-
-    dataDir = mkOption {
-      type = types.str;
-      default = "/var/lib/anka-ai";
-      description = "ANKA AI data directory";
+      description = "Reserved: Whisper model size (tiny, base, small, medium, large).";
     };
   };
 
@@ -77,53 +95,27 @@ in
     services.ollama = {
       enable = true;
       port = cfg.port;
+      package = {
+        cpu    = pkgs.ollama;
+        vulkan = pkgs.ollama-vulkan;
+        rocm   = pkgs.ollama-rocm;
+        cuda   = pkgs.ollama-cuda;
+      }.${if cfg.acceleration == "auto"
+          then (if config.anka.gpu.type == "none" then "cpu" else "vulkan")
+          else cfg.acceleration};
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} 0750 anka anka-users -"
-      "d ${cfg.dataDir}/models 0750 anka anka-users -"
-      "d ${cfg.dataDir}/conversations 0750 anka anka-users -"
-      "d /etc/anka 0755 root root -"
-      "d /etc/anka/services 0755 root root -"
-      "d /var/log/anka 0755 root root -"
-    ];
-
-    # ── D-Bus session policy ──────────────────────────────────────────────────
-    environment.etc."dbus-1/session.d/org.anka.AI.conf".text = ''
-      <!DOCTYPE busconfig PUBLIC
-        "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-        "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-      <busconfig>
-        <policy user="anka">
-          <allow own="org.anka.AI"/>
-          <allow send_destination="org.anka.AI"/>
-        </policy>
-        <policy context="default">
-          <allow send_destination="org.anka.AI"/>
-        </policy>
-      </busconfig>
-    '';
-
-    # ── D-Bus session activation ──────────────────────────────────────────────
-    environment.etc."dbus-1/services/org.anka.AI.service".text = ''
-      [D-BUS Service]
-      Name=org.anka.AI
-      Exec=${anka-ai-pkg}/bin/anka-ai-daemon
-      SystemdService=anka-ai.service
-    '';
-
-    # ── Systemd user service ──────────────────────────────────────────────────
+    # Started with the desktop session; logs go to the user journal
+    # (journalctl --user -u anka-ai).
     systemd.user.services.anka-ai = {
-      description = "ANKA AI Daemon (D-Bus session service)";
+      description = "ANKA AI Daemon (org.anka.AI)";
       after    = [ "graphical-session.target" "dbus.socket" ];
       requires = [ "dbus.socket" ];
       wantedBy = [ "graphical-session.target" ];
 
       environment = {
-        ANKA_AI_MODEL  = cfg.localModel;
-        ANKA_DATA_DIR  = cfg.dataDir;
-        OLLAMA_HOST    = "http://localhost:${toString cfg.port}";
-        WHISPER_MODEL  = cfg.whisperModel;
+        ANKA_AI_MODEL = cfg.localModel;
+        OLLAMA_HOST   = "http://localhost:${toString cfg.port}";
       };
 
       serviceConfig = {
@@ -132,19 +124,13 @@ in
         ExecStart        = "${anka-ai-pkg}/bin/anka-ai-daemon";
         Restart          = "on-failure";
         RestartSec       = "5s";
-        StandardOutput   = "journal";
-        StandardError    = "journal";
         SyslogIdentifier = "anka-ai";
       };
     };
 
-    # ── Daemon available in PATH ──────────────────────────────────────────────
     environment.systemPackages = [ anka-ai-pkg ];
 
-    environment.sessionVariables = {
-      ANKA_AI_PORT  = toString cfg.port;
-      ANKA_AI_MODEL = cfg.localModel;
-      ANKA_DATA_DIR = cfg.dataDir;
-    };
+    # Built by `nix flake check` (see checks in flake.nix)
+    system.build.ankaAi = anka-ai-pkg;
   };
 }

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -19,7 +19,7 @@ log = logging.getLogger("anka.mcp.diagnostics")
 
 mcp = FastMCP(
     name="anka-diagnostics",
-    description="Read-only system diagnostics: logs, temps, disk, services",
+    instructions="Read-only system diagnostics: logs, temps, disk, services",
 )
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ def _run(cmd: list[str], timeout: int = 30) -> subprocess.CompletedProcess[str]:
         "openWorldHint": False,
     }
 )
-def get_logs(service: Optional[str] = None, lines: int = 50) -> dict[str, Any]:
+def get_logs(service: str | None = None, lines: int = 50) -> dict[str, Any]:
     """
     Retrieve recent journal log entries.
 

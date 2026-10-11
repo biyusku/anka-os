@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import traceback
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -19,7 +19,7 @@ log = logging.getLogger("anka.mcp.audio")
 
 mcp = FastMCP(
     name="anka-audio",
-    description="PipeWire/PulseAudio volume, mute, and device control",
+    instructions="PipeWire/PulseAudio volume, mute, and device control",
 )
 
 # ---------------------------------------------------------------------------
@@ -103,7 +103,7 @@ def get_audio_status() -> dict[str, Any]:
 
         # Get volume of default sink
         vol_result = _pactl("get-sink-volume", "@DEFAULT_SINK@")
-        volume_percent: Optional[int] = None
+        volume_percent: int | None = None
         for part in vol_result.stdout.split():
             if part.endswith("%"):
                 try:

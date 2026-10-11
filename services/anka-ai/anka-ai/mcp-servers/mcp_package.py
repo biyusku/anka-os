@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
-import traceback
 from typing import Any
 
 from fastmcp import FastMCP
@@ -20,7 +19,7 @@ log = logging.getLogger("anka.mcp.package")
 
 mcp = FastMCP(
     name="anka-package",
-    description="Nix package search, install, remove, and system update",
+    instructions="Nix package search, install, remove, and system update",
 )
 
 # ---------------------------------------------------------------------------

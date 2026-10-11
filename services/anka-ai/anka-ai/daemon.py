@@ -1,242 +1,224 @@
 #!/usr/bin/env python3
 """
 ANKA AI Daemon
-D-Bus service providing AI capabilities to ANKA OS desktop
+D-Bus session service (org.anka.AI) that answers questions with a local
+Ollama model.
+
+- Logs to stderr, which the systemd user unit sends to the journal.
+- Never blocks on start-up: a missing model is pulled in the background the
+  first time someone asks, and Ask() reports progress until it is ready.
+- Respects the first-run wizard: AI_MODE=none in ~/.config/anka/setup.conf
+  turns the assistant off.
 """
 
-import dbus
-import dbus.service
-import dbus.mainloop.glib
-from gi.repository import GLib
-import requests
 import json
 import logging
 import os
 import signal
-import sys
+import threading
 from pathlib import Path
 
-# D-Bus service configuration
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+import requests
+from gi.repository import GLib
+
 DBUS_SERVICE_NAME = "org.anka.AI"
 DBUS_OBJECT_PATH = "/org/anka/AI"
 DBUS_INTERFACE = "org.anka.AI"
 
-# Ollama configuration
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-DEFAULT_MODEL = os.environ.get("ANKA_AI_MODEL", "llama3.2:1b")
+DEFAULT_MODEL = os.environ.get("ANKA_AI_MODEL", "qwen2.5:7b")
+SETUP_CONF = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "anka" / "setup.conf"
+MAX_HISTORY = 20
 
-# Data directory
-DATA_DIR = Path(os.environ.get("ANKA_DATA_DIR", "/var/lib/anka-ai"))
+SYSTEM_PROMPT = """You are ANKA AI, the assistant built into ANKA OS.
+ANKA OS is a NixOS-based desktop operating system that aims to be as simple
+as macOS, as compatible as Windows and as light as Linux.
+You help users with:
+- using the KDE Plasma desktop and their apps
+- games and Windows programs (Steam, Proton, Bottles)
+- troubleshooting hardware and software problems
+- system settings and NixOS concepts
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("/var/log/anka/ai-daemon.log"),
-        logging.StreamHandler(),
-    ],
-)
+Be concise and helpful, and answer in the user's language (Turkish or English).
+If you don't know something, say so clearly."""
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("anka-ai-daemon")
 
 
-class AnkaAIService(dbus.service.Object):
-    """
-    ANKA AI D-Bus service.
-    Exposes AI capabilities to desktop applications via D-Bus.
-    """
+def read_ai_mode(path=SETUP_CONF):
+    """AI_MODE chosen in the first-run wizard: "local", "cloud", "none" or None."""
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "AI_MODE":
+                return value.strip()
+    except OSError:
+        pass
+    return None
 
-    def __init__(self, bus: dbus.SessionBus, object_path: str) -> None:
-        super().__init__(bus, object_path)
-        self.model = DEFAULT_MODEL
-        self.conversation_history: list[dict] = []
-        self.is_ready = False
-        self._check_ollama()
-        logger.info(f"ANKA AI Service initialized on {DBUS_SERVICE_NAME}")
 
-    def _check_ollama(self) -> None:
-        """Check if Ollama is running and the model is available."""
+def model_available(model, names):
+    """Is *model* among the installed Ollama model *names*? ("qwen2.5" matches "qwen2.5:latest")."""
+    wanted = model if ":" in model else model + ":latest"
+    return wanted in names
+
+
+class ModelManager:
+    """Tracks whether the model is installed and pulls it in the background."""
+
+    def __init__(self, model):
+        self.model = model
+        self.pulling = False
+        self.pull_error = None
+        self._lock = threading.Lock()
+
+    def installed(self):
+        response = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=5)
+        response.raise_for_status()
+        names = [m["name"] for m in response.json().get("models", [])]
+        return model_available(self.model, names)
+
+    def ensure_pulling(self):
+        with self._lock:
+            if self.pulling:
+                return
+            self.pulling = True
+            self.pull_error = None
+        threading.Thread(target=self._pull, args=(self.model,), daemon=True).start()
+
+    def _pull(self, model):
+        logger.info("Pulling model %s", model)
         try:
-            response = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=5)
-            if response.status_code == 200:
-                models = response.json().get("models", [])
-                model_names = [m["name"] for m in models]
-
-                if self.model in model_names or any(
-                    m.startswith(self.model.split(":")[0]) for m in model_names
-                ):
-                    self.is_ready = True
-                    logger.info(f"Ollama ready with model: {self.model}")
-                else:
-                    logger.warning(
-                        f"Model {self.model} not found. Available: {model_names}"
-                    )
-                    self._pull_model()
-        except requests.RequestException as e:
-            logger.error(f"Ollama not reachable: {e}")
-            self.is_ready = False
-
-    def _pull_model(self) -> None:
-        """Pull the default model if not available."""
-        try:
-            logger.info(f"Pulling model: {self.model}")
             response = requests.post(
-                f"{OLLAMA_HOST}/api/pull",
-                json={"name": self.model, "stream": False},
-                timeout=300,
+                f"{OLLAMA_HOST}/api/pull", json={"model": model, "stream": False}, timeout=None
             )
-            if response.status_code == 200:
-                self.is_ready = True
-                logger.info(f"Model {self.model} pulled successfully")
+            response.raise_for_status()
+            logger.info("Model %s is ready", model)
         except requests.RequestException as e:
-            logger.error(f"Failed to pull model: {e}")
+            logger.error("Pulling %s failed: %s", model, e)
+            self.pull_error = str(e)
+        finally:
+            with self._lock:
+                self.pulling = False
 
-    @dbus.service.method(
-        DBUS_INTERFACE,
-        in_signature="s",
-        out_signature="s"
-    )
-    def Ask(self, question: str) -> str:
-        """
-        Ask the AI a question. Returns the AI's response.
-        D-Bus method: org.anka.AI.Ask(question) -> response
-        """
-        if not self.is_ready:
-            return json.dumps({
-                "success": False,
-                "error": "ANKA AI is not ready. Ollama may not be running."
-            })
 
+class AnkaAIService(dbus.service.Object):
+    """org.anka.AI — AI capabilities for desktop applications."""
+
+    def __init__(self, bus, object_path):
+        super().__init__(bus, object_path)
+        self.models = ModelManager(DEFAULT_MODEL)
+        self.conversation_history = []
+        logger.info("ANKA AI ready on %s (model %s)", DBUS_SERVICE_NAME, DEFAULT_MODEL)
+
+    def _not_ready_reason(self, start_download):
+        """None when a question can be answered, otherwise a message for the user.
+
+        Only a question (start_download=True) starts downloading a missing model,
+        never a status query.
+        """
+        if read_ai_mode() == "none":
+            return "ANKA AI is turned off. Turn it on again in ~/.config/anka/setup.conf (AI_MODE=local)."
         try:
-            self.conversation_history.append({
-                "role": "user",
-                "content": question
-            })
+            if self.models.installed():
+                return None
+        except requests.RequestException as e:
+            logger.error("Ollama not reachable: %s", e)
+            return "ANKA AI can't reach Ollama. Is ollama.service running?"
+        if self.models.pull_error:
+            return f"Downloading {self.models.model} failed: {self.models.pull_error}"
+        if start_download:
+            self.models.ensure_pulling()
+        if self.models.pulling:
+            return f"ANKA AI is downloading its model ({self.models.model}). Try again in a few minutes."
+        return f"The model ({self.models.model}) is downloaded the first time you ask a question."
 
-            system_prompt = """You are ANKA AI, the intelligent assistant built into ANKA OS.
-ANKA OS is a lightweight NixOS-based operating system designed for old/low-spec hardware.
-You help users with:
-- System configuration and NixOS concepts
-- Troubleshooting hardware and software issues
-- Using KDE Plasma desktop
-- Understanding Linux concepts
+    @dbus.service.method(DBUS_INTERFACE, in_signature="s", out_signature="s")
+    def Ask(self, question):
+        """org.anka.AI.Ask(question) -> JSON {success, response | error}"""
+        reason = self._not_ready_reason(start_download=True)
+        if reason:
+            return json.dumps({"success": False, "error": reason, "downloading": self.models.pulling})
 
-Be concise, helpful, and speak in the user's language (Turkish or English).
-If you don't know something, say so clearly."""
-
+        self.conversation_history.append({"role": "user", "content": question})
+        try:
             response = requests.post(
                 f"{OLLAMA_HOST}/api/chat",
                 json={
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        *self.conversation_history,
-                    ],
+                    "model": self.models.model,
+                    "messages": [{"role": "system", "content": SYSTEM_PROMPT}, *self.conversation_history],
                     "stream": False,
                 },
-                timeout=60,
+                timeout=300,
             )
+            response.raise_for_status()
+            answer = response.json()["message"]["content"]
+        except (requests.RequestException, KeyError, ValueError) as e:
+            self.conversation_history.pop()
+            logger.error("Ask failed: %s", e)
+            return json.dumps({"success": False, "error": f"Ollama error: {e}"})
 
-            if response.status_code == 200:
-                data = response.json()
-                answer = data["message"]["content"]
+        self.conversation_history.append({"role": "assistant", "content": answer})
+        self.conversation_history = self.conversation_history[-MAX_HISTORY:]
+        return json.dumps({"success": True, "response": answer, "model": self.models.model})
 
-                self.conversation_history.append({
-                    "role": "assistant",
-                    "content": answer
-                })
-
-                if len(self.conversation_history) > 20:
-                    self.conversation_history = self.conversation_history[-20:]
-
-                return json.dumps({
-                    "success": True,
-                    "response": answer,
-                    "model": self.model
-                })
-            else:
-                return json.dumps({
-                    "success": False,
-                    "error": f"Ollama error: {response.status_code}"
-                })
-
-        except requests.Timeout:
-            return json.dumps({
-                "success": False,
-                "error": "Request timed out. The model may be loading."
-            })
-        except Exception as e:
-            logger.error(f"Ask failed: {e}")
-            return json.dumps({"success": False, "error": str(e)})
-
-    @dbus.service.method(
-        DBUS_INTERFACE,
-        in_signature="",
-        out_signature="s"
-    )
-    def GetStatus(self) -> str:
-        """Get ANKA AI service status."""
+    @dbus.service.method(DBUS_INTERFACE, in_signature="", out_signature="s")
+    def GetStatus(self):
+        """Service status as JSON."""
+        reason = self._not_ready_reason(start_download=False)
         return json.dumps({
-            "ready": self.is_ready,
-            "model": self.model,
+            "ready": reason is None,
+            "reason": reason,
+            "downloading": self.models.pulling,
+            "model": self.models.model,
             "ollama_host": OLLAMA_HOST,
             "conversation_length": len(self.conversation_history),
-            "version": "1.0.0",
-            "service": DBUS_SERVICE_NAME
+            "service": DBUS_SERVICE_NAME,
         })
 
-    @dbus.service.method(
-        DBUS_INTERFACE,
-        in_signature="",
-        out_signature="b"
-    )
-    def ClearHistory(self) -> bool:
-        """Clear conversation history."""
+    @dbus.service.method(DBUS_INTERFACE, in_signature="", out_signature="b")
+    def ClearHistory(self):
         self.conversation_history = []
         logger.info("Conversation history cleared")
         return True
 
-    @dbus.service.method(
-        DBUS_INTERFACE,
-        in_signature="s",
-        out_signature="b"
-    )
-    def SetModel(self, model_name: str) -> bool:
-        """Change the AI model."""
-        self.model = model_name
-        self.is_ready = False
-        self._check_ollama()
-        return self.is_ready
+    @dbus.service.method(DBUS_INTERFACE, in_signature="s", out_signature="b")
+    def SetModel(self, model_name):
+        """Switch to another Ollama model; it is pulled on the next question if missing."""
+        self.models = ModelManager(model_name)
+        self.conversation_history = []
+        self.StatusChanged(json.dumps({"model": model_name}))
+        return True
 
     @dbus.service.signal(DBUS_INTERFACE, signature="s")
-    def StatusChanged(self, status: str) -> None:
-        """Signal emitted when service status changes."""
-        pass
+    def StatusChanged(self, status):
+        """Emitted when the service status changes."""
 
 
-def main() -> None:
-    """Start the ANKA AI daemon."""
+def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
     session_bus = dbus.SessionBus()
+    # Keep references: the bus name and object live as long as the loop.
     bus_name = dbus.service.BusName(DBUS_SERVICE_NAME, session_bus)
     service = AnkaAIService(session_bus, DBUS_OBJECT_PATH)
 
-    def handle_signal(signum: int, frame) -> None:
-        logger.info(f"Received signal {signum}, shutting down ANKA AI daemon")
+    loop = GLib.MainLoop()
+
+    def handle_signal(signum, _frame):
+        logger.info("Received signal %s, shutting down", signum)
         loop.quit()
 
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
-
-    loop = GLib.MainLoop()
-    logger.info(f"ANKA AI Daemon started - listening on {DBUS_SERVICE_NAME}")
-
     try:
         loop.run()
-    except KeyboardInterrupt:
-        pass
     finally:
-        logger.info("ANKA AI Daemon stopped")
+        del service, bus_name
+        logger.info("ANKA AI daemon stopped")
 
 
 if __name__ == "__main__":

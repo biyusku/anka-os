@@ -111,6 +111,8 @@
     checks.${system} = {
       anka-update     = self.nixosConfigurations.anka.config.system.build.ankaUpdate;
       kcm-anka-update = self.nixosConfigurations.anka.config.system.build.kcmAnkaUpdate;
+      anka-ai         = self.nixosConfigurations.anka.config.system.build.ankaAi;
+      anka-mcp        = self.nixosConfigurations.anka.config.system.build.ankaMcpServers;
     };
 
     # ── Convenience package aliases ───────────────────────────────────────
