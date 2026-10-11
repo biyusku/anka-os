@@ -26,6 +26,10 @@ Son güncelleme: 2026-10-11
 - Tam sistem derlemesi (AMD, sanal makine): gerçek derleme hatası yok; sadece
   sandbox proxy'sinin engellediği indirmeler (Steam, Discord, firmware) başarısız.
 
+- Oyun Modu: giriş ekranında "Steam" oturumu (gamescope); `gameMode.default` ile konsol gibi açılış.
+- Görünüm (`modules/branding`): ANKA duvar kâğıdı (artwork/gen_wallpaper.py), logo,
+  "ANKA OS" adı + Plymouth logosu, Breeze Dark + kırmızı vurgu, SDDM/kilit ekranı arka planı.
+
 ## Sıradaki işler
 
 - AI: daemon çalışıyor ama intent/router/memory/voice/confirmation_gate hâlâ bağlı değil;

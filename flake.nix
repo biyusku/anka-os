@@ -114,6 +114,7 @@
       anka-ai         = self.nixosConfigurations.anka.config.system.build.ankaAi;
       anka-mcp        = self.nixosConfigurations.anka.config.system.build.ankaMcpServers;
       anka-first-run  = self.nixosConfigurations.anka.config.system.build.ankaFirstRun;
+      anka-artwork    = self.nixosConfigurations.anka.config.system.build.ankaArtwork;
     };
 
     # ── Convenience package aliases ───────────────────────────────────────

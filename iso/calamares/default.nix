@@ -55,6 +55,8 @@ let
     cp ${./modules}/*.conf $out/etc/calamares/modules/
     cp ${ankainstallConf} $out/etc/calamares/modules/ankainstall.conf
     cp -r ${./branding/anka} $out/share/calamares/branding/anka
+    chmod -R u+w $out/share/calamares/branding/anka
+    cp ${../../modules/branding/artwork/logo.svg} $out/share/calamares/branding/anka/logo.svg
     install -Dm644 ${./ankainstall/module.desc} $out/lib/calamares/modules/ankainstall/module.desc
     install -Dm644 ${./ankainstall/main.py}     $out/lib/calamares/modules/ankainstall/main.py
   '';

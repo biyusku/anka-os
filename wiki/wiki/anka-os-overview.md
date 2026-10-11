@@ -54,6 +54,7 @@ flake.nix
 | `performance/` | zram, governor, THP, earlyoom, AMD tweaks |
 | `compat/windows.nix` | GE-Proton, umu-launcher, Bottles, NTFS |
 | `compat/media.nix` | DVD, VAAPI, HW decode, media codecs |
+| `branding/` | ANKA görünümü: duvar kâğıdı, logo, "ANKA OS" adı, açılış ekranı, vurgu rengi |
 | `accessibility/` | Orca, büyük fontlar (opt-in) |
 | `update/` | Güncelleme sistemi + KDE KCM |
 | `installer/` | First-run wizard |

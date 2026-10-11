@@ -12,6 +12,9 @@
     # The ANKA installer
     ./calamares
 
+    # ANKA look in the live session (wallpaper, boot splash logo)
+    ../modules/branding/default.nix
+
     # Bring in ANKA system modules (subset safe for ISO)
     ../modules/desktop/default.nix
     ../modules/gpu/default.nix
