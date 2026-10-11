@@ -1,85 +1,84 @@
-// ANKA OS — slides shown while ANKA installs (Calamares slideshow API 2)
-import QtQuick 2.0;
-import calamares.slideshow 1.0;
+// ANKA OS — shown while ANKA installs (Calamares slideshow API 2).
+// One idea per slide, a few words each; colours follow the system.
+import QtQuick 2.15
+import calamares.slideshow 1.0
 
-Presentation
-{
+Presentation {
     id: presentation
 
+    // The language picked on the first page of the installer
+    function t(tr, en) { return Qt.locale().name.indexOf("tr") === 0 ? tr : en }
+
+    SystemPalette { id: palette; colorGroup: SystemPalette.Active }
+
+    Rectangle {
+        anchors.fill: parent
+        color: palette.window
+        z: -1
+    }
+
     Timer {
-        interval: 15000
+        interval: 12000
         running: presentation.activatedInCalamares
         repeat: true
         onTriggered: presentation.goToNextSlide()
     }
 
     component AnkaSlide: Slide {
-        property string title
+        property string heading
         property string body
-        property string subtitle
 
-        Image {
-            id: logo
-            source: "logo.svg"
-            width: 120; height: 120
-            fillMode: Image.PreserveAspectFit
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: heading.top
-            anchors.bottomMargin: 24
-        }
-        Text {
-            id: heading
+        Column {
             anchors.centerIn: parent
-            text: title
-            font.pixelSize: 30
-            font.weight: Font.DemiBold
-            color: "#c0392b"
-            width: presentation.width
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-        }
-        Text {
-            id: bodyText
-            anchors.top: heading.bottom
-            anchors.topMargin: 12
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: body
-            font.pixelSize: 16
-            width: presentation.width * 0.8
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-        }
-        Text {
-            anchors.top: bodyText.bottom
-            anchors.topMargin: 8
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: subtitle
-            font.pixelSize: 13
-            color: "#888888"
-            width: presentation.width * 0.8
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
+            width: Math.min(parent.width * 0.8, 560)
+            spacing: 16
+
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: "logo.svg"
+                sourceSize.width: 96
+                sourceSize.height: 96
+            }
+            Item { width: 1; height: 8 }
+            Text {
+                width: parent.width
+                text: heading
+                color: palette.windowText
+                font.pixelSize: 28
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                width: parent.width
+                text: body
+                color: palette.windowText
+                opacity: 0.6
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+            }
         }
     }
 
     AnkaSlide {
-        title: "ANKA OS'e hoş geldin"
-        body: "Eski bir laptop, yeni bir hayat. Kurulum birkaç dakika sürecek."
-        subtitle: "Welcome to ANKA OS — this will take a few minutes."
+        heading: presentation.t("ANKA kuruluyor", "Installing ANKA")
+        body: presentation.t("Birkaç dakika sürer. Bitince bilgisayarını yeniden başlatman yeterli.",
+                             "This takes a few minutes. When it's done, just restart your computer.")
     }
     AnkaSlide {
-        title: "Windows oyunları ve uygulamaları"
-        body: "Steam, Proton ve Bottles hazır gelir. Oyununu kur ve oyna."
-        subtitle: "Steam, Proton and Bottles are included."
+        heading: presentation.t("Oyunlar hazır", "Ready for games")
+        body: presentation.t("Steam ve Proton ile Windows oyunları da çalışır.",
+                             "With Steam and Proton, Windows games work too.")
     }
     AnkaSlide {
-        title: "Hafif ve hızlı"
-        body: "CachyOS çekirdeği, zram ve akıllı bellek yönetimi eski donanımda bile akıcı bir deneyim sunar."
-        subtitle: "Tuned to stay fast on older hardware."
+        heading: presentation.t("Hızlı ve hafif", "Fast and light")
+        body: presentation.t("Eski bilgisayarlarda bile akıcı çalışacak şekilde ayarlandı.",
+                             "Tuned to stay smooth even on older computers.")
     }
     AnkaSlide {
-        title: "Bozulmayan sistem"
-        body: "Her güncelleme ayrı bir sürüm olarak saklanır. Bir şey ters giderse açılışta önceki sürümü seç."
-        subtitle: "Every update can be rolled back from the boot menu."
+        heading: presentation.t("Gönül rahatlığıyla güncelle", "Update without worry")
+        body: presentation.t("Bir güncelleme beğenmezsen Sistem Ayarları › ANKA Updates'ten önceki sürüme dön.",
+                             "Don't like an update? Go back to the previous version in System Settings › ANKA Updates.")
     }
 }

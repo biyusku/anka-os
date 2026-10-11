@@ -83,6 +83,23 @@ in
 
   environment.systemPackages = [
     ankaCalamares
+    # "Install ANKA" with the ANKA logo (desktop shortcut and app menu)
+    # in place of Calamares' own "Install System" entry.
+    (lib.hiPrio (pkgs.writeTextDir "share/applications/calamares.desktop" ''
+      [Desktop Entry]
+      Type=Application
+      Name=Install ANKA
+      Name[tr]=ANKA'yı Kur
+      Comment=Install ANKA OS on this computer
+      Comment[tr]=ANKA OS'i bu bilgisayara kur
+      Exec=sh -c "pkexec calamares"
+      TryExec=calamares
+      Icon=anka
+      Terminal=false
+      StartupNotify=true
+      Categories=Qt;System;
+      X-AppStream-Ignore=true
+    ''))
     # Open the installer as soon as the live desktop starts.
     (pkgs.makeAutostartItem { name = "calamares"; package = ankaCalamares; })
     pkgs.glibcLocales

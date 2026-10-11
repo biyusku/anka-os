@@ -31,12 +31,13 @@ images:
   productIcon:    "logo.svg"
   productWelcome: "logo.svg"
 
-# Deep red + gold (docs/branding.md)
+# Quiet sidebar in the window colour; the current step stands out
+# (ANKA colours, modules/branding/colors.nix)
 style:
-  SidebarBackground:        "#1a0a0a"
-  SidebarText:              "#f2e6cf"
-  SidebarTextCurrent:       "#ffffff"
-  SidebarBackgroundCurrent: "#c0392b"
+  SidebarBackground:        "#1e1e1e"
+  SidebarText:              "#98989d"
+  SidebarTextCurrent:       "#f5f5f7"
+  SidebarBackgroundCurrent: "#323234"
 
 slideshow:    "show.qml"
 slideshowAPI: 2

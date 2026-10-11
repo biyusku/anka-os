@@ -160,6 +160,21 @@ def settings(**overrides):
     return base
 
 
+class OtherOsPresent(unittest.TestCase):
+    def test_ntfs_partition(self):
+        self.assertTrue(ankainstall.other_os_present("vfat\nntfs\nbtrfs\n", None))
+
+    def test_bitlocker_partition(self):
+        self.assertTrue(ankainstall.other_os_present("vfat\nBitLocker\n", None))
+
+    def test_windows_boot_loader_on_esp(self):
+        esp = pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, esp)
+        self.assertFalse(ankainstall.other_os_present("vfat\nbtrfs\n", str(esp)))
+        (esp / "EFI/Microsoft/Boot").mkdir(parents=True)
+        self.assertTrue(ankainstall.other_os_present("vfat\nbtrfs\n", str(esp)))
+
+
 class BuildConfiguration(unittest.TestCase):
     def test_efi_btrfs_desktop(self):
         cfg = ankainstall.build_configuration(settings())
@@ -179,7 +194,12 @@ class BuildConfiguration(unittest.TestCase):
         self.assertIn('users.users."ayse" = {', cfg)
         self.assertIn('description  = "Ayşe \\"Dev\\" Yılmaz";', cfg)
         self.assertNotIn("autoLogin", cfg)
+        self.assertNotIn("anka.boot.timeout", cfg)
         self.assertIn('system.stateVersion = "26.11";', cfg)
+
+    def test_windows_keeps_the_boot_menu(self):
+        cfg = ankainstall.build_configuration(settings(other_os=True))
+        self.assertIn("anka.boot.timeout = 5;", cfg)
 
     def test_bios_ext4_luks_nvidia_laptop(self):
         cfg = ankainstall.build_configuration(settings(
@@ -259,6 +279,8 @@ class Run(unittest.TestCase):
                 (self.root / "etc/nixos/hardware-configuration.nix").write_text(HARDWARE_CONFIG)
             if cmd[0] == "lspci":
                 return (NVIDIA_RTX3060 + "\n").encode()
+            if cmd[0] == "lsblk":
+                return b"vfat\nbtrfs\nntfs\n"
             return b""
 
         class FakePopen:
@@ -317,6 +339,7 @@ class Run(unittest.TestCase):
         self.assertIn('anka.profile = "light";', config)
         self.assertIn('time.timeZone = "Europe/Istanbul";', config)
         self.assertIn('system.stateVersion = "26.11";', config)
+        self.assertIn("anka.boot.timeout = 5;", config)
         self.assertIn('"subvol=@home"', (etc / "hardware-configuration.nix").read_text())
         install = self.commands[-1]
         self.assertEqual(install[:2], ["pkexec", "nixos-install"])

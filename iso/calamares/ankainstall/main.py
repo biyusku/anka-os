@@ -116,6 +116,17 @@ def detect_gpu(lspci_output):
     return {"type": "none"}  # virtual machines, unknown vendors
 
 
+def other_os_present(fstypes, esp_dir):
+    """
+    True when Windows is on this computer: an NTFS or BitLocker partition
+    (``lsblk -rno FSTYPE`` output) or a Windows boot loader on the ESP.
+    The boot menu is then shown for 5 seconds instead of being hidden.
+    """
+    if any(fstype.lower() in ("ntfs", "bitlocker") for fstype in fstypes.split()):
+        return True
+    return bool(esp_dir) and os.path.isdir(os.path.join(esp_dir, "EFI", "Microsoft"))
+
+
 def root_partition(partitions):
     for part in partitions or []:
         if part.get("mountPoint") == "/":
@@ -194,7 +205,7 @@ def build_configuration(settings):
     *settings* keys: profile ("full" | "light"), firmware ("efi" | "bios"),
     boot_device, root_fs, root_luks, btrfs_mounts, gpu (from detect_gpu),
     hostname, timezone, locale, locale_extra (dict), kb_layout, kb_variant,
-    vconsole, username, fullname, autologin, state_version.
+    vconsole, username, fullname, autologin, state_version, other_os.
     """
     out = [
         "# ANKA OS — this computer's settings (written by the ANKA installer).",
@@ -217,6 +228,8 @@ def build_configuration(settings):
         out.append("  anka.boot.grubDevice = {};".format(nix_str(settings.get("boot_device") or "nodev")))
         if settings.get("root_luks"):
             out.append("  boot.loader.grub.enableCryptodisk = true;  # /boot lives on the encrypted root")
+    if settings.get("other_os"):
+        out.append("  anka.boot.timeout = 5;  # Windows is installed too: show the boot menu")
 
     out += ["", "  # ── Disk ──────────────────────────────────────────────────────────────"]
     root_fs = settings.get("root_fs") or "ext4"
@@ -395,6 +408,12 @@ def run():
     _set_status("Writing the ANKA configuration", 0.05)
     state_version = ".".join(subprocess.getoutput("nixos-version").split(".")[:2])
     settings = _collect_settings(gs, gpu, state_version)
+    try:
+        fstypes = subprocess.check_output(["lsblk", "-rno", "FSTYPE"], stderr=subprocess.STDOUT)
+        fstypes = fstypes.decode("utf8", "replace")
+    except (subprocess.CalledProcessError, OSError):
+        fstypes = ""
+    settings["other_os"] = other_os_present(fstypes, os.path.join(root_mount, "boot"))
     _write_root_file(os.path.join(etc_nixos, "configuration.nix"), build_configuration(settings))
     _write_root_file(os.path.join(etc_nixos, "flake.nix"), build_flake(conf["flakeUrl"]))
     lock_file = conf.get("lockFile") or ""
