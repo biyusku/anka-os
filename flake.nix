@@ -106,6 +106,13 @@
       ];
     };
 
+    # ── Built by `nix flake check` (CI) ───────────────────────────────────
+    # Packages ANKA builds itself: evaluating the system doesn't compile them.
+    checks.${system} = {
+      anka-update     = self.nixosConfigurations.anka.config.system.build.ankaUpdate;
+      kcm-anka-update = self.nixosConfigurations.anka.config.system.build.kcmAnkaUpdate;
+    };
+
     # ── Convenience package aliases ───────────────────────────────────────
     # nix build .#iso            → generic / AMD
     # nix build .#iso-amd        → explicit AMD alias

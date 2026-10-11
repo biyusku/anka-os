@@ -114,34 +114,39 @@ Her intent: `handler` (module.function yolu), `requires_llm`, `llm_tier`, `is_de
 
 ## Güncelleme Sistemi
 
-```
-GitHub push/tag → GitHub Actions
-                  ├── build-iso (amd/nvidia/intel matrix)
-                  ├── Cachix cache push
-                  └── GitHub Release (ISO artifacts)
+Kurulu makinenin `/etc/nixos` flake'i ANKA'yı `anka` girdisi olarak kullanır.
+Güncelleme = bu girdiyi yeni ANKA'ya taşıyıp sistemi yeniden derlemek.
+Hepsini tek araç yapar: `anka-update` (`modules/update/anka-update.sh`).
 
-Kurulu sistem (her gün 03:30)
-→ anka-update-check.timer/service
-  ├── /etc/anka-version okur
-  ├── GitHub API'den son sürümü sorgular
-  ├── Yeniyse: D-Bus masaüstü bildirimi
-  └── autoApply=true ise: anka-apply-update.service başlatır
-
-KDE KCM (System Settings > ANKA Updates)
-  ├── Mevcut/yeni sürüm gösterimi
-  ├── "Güncelle" butonu → pkexec systemctl start anka-apply-update
-  ├── journalctl canlı log
-  └── "Önceki Sürüme Dön" → nixos-rebuild --rollback
 ```
+anka-update status [--json]   yüklü / en yeni sürüm (root gerekmez)
+anka-update check             durum + masaüstü bildirimi (autoApply ise uygular)
+sudo anka-update apply        kanaldaki en yeni ANKA'ya güncelle
+sudo anka-update rollback     son güncellemeden önceki ANKA'ya dön
+
+anka-update-check.timer   → açılıştan 5 dk sonra, sonra her checkInterval
+KDE KCM (Sistem Ayarları › ANKA Updates)
+  ├── anka-update status --json ile sürüm gösterimi
+  ├── "Güncelle"           → pkexec systemctl start anka-apply-update
+  └── "Önceki Sürüme Dön"  → pkexec systemctl start anka-rollback
+```
+
+**Kanallar:** `stable` = en yeni `vX.Y.Z` etiketi (ilk sürüme kadar `main`),
+`unstable` = `main` dalı. `main`'den ileride olan makineler asla geri
+düşürülmez (GitHub compare API ile kontrol edilir).
 
 **Modül opsiyonları:**
 
 | Opsiyon | Default | Açıklama |
 |---|---|---|
 | `anka.update.enable` | `true` | Güncelleme sistemi |
-| `anka.update.channel` | `"stable"` | `stable` veya `nightly` |
-| `anka.update.schedule` | `"*-*-* 03:30:00"` | systemd takvim |
+| `anka.update.channel` | `"stable"` | `stable` veya `unstable` |
+| `anka.update.repo` | `"biyusku/anka-os"` | GitHub owner/repo |
+| `anka.update.checkInterval` | `"6h"` | Kontrol aralığı |
 | `anka.update.autoApply` | `false` | Otomatik güncelleme |
+| `anka.update.flakePath` | `"/etc/nixos"` | Makinenin sistem flake'i |
+
+Ayrıntılar: `docs/update-system.md`
 
 ---
 

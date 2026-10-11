@@ -20,7 +20,7 @@
       find = "fd";
       # ANKA shortcuts
       anka-rebuild = "sudo nixos-rebuild switch --flake /etc/nixos#anka";
-      anka-update  = "sudo nix flake update /etc/nixos && anka-rebuild";
+      # Updates: `anka-update` (modules/update)
     };
 
     initContent = ''

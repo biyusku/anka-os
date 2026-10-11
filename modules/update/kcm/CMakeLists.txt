@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ── Extra CMake Modules ───────────────────────────────────────────────────────
-find_package(ECM REQUIRED NO_MODULE)
+# A version is required: without it KDECMakeSettings skips the output
+# directories that kcoreaddons_add_plugin needs.
+find_package(ECM 6.0.0 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 include(KDEInstallDirs)
@@ -14,7 +16,7 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 
 # ── Qt6 ───────────────────────────────────────────────────────────────────────
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick)
 
 # ── KF6 ───────────────────────────────────────────────────────────────────────
 find_package(KF6 REQUIRED COMPONENTS
@@ -23,7 +25,7 @@ find_package(KF6 REQUIRED COMPONENTS
     KCMUtils
 )
 
-# ── KCM target ────────────────────────────────────────────────────────────────
+# ── KCM target (QML from ui/ is compiled in as resources) ─────────────────────
 kcmutils_add_qml_kcm(kcm_anka_update
     SOURCES kcm_anka_update.cpp
 )
@@ -31,16 +33,9 @@ kcmutils_add_qml_kcm(kcm_anka_update
 target_link_libraries(kcm_anka_update PRIVATE
     Qt6::Core
     Qt6::Quick
-    Qt6::Network
     KF6::CoreAddons
     KF6::I18n
     KF6::KCMUtils
-)
-
-# ── QML package ───────────────────────────────────────────────────────────────
-install(
-    DIRECTORY package
-    DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/plasma/anka
 )
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

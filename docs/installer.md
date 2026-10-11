@@ -55,10 +55,12 @@ verilir. Bu yüzden `configuration.nix` içine yazılan her ayar bunları
 # Ayar değiştir (configuration.nix'i düzenledikten sonra)
 sudo nixos-rebuild switch --flake /etc/nixos#anka
 
-# ANKA'yı güncelle
-sudo nix flake update anka --flake /etc/nixos
-sudo nixos-rebuild switch --flake /etc/nixos#anka
+# ANKA'yı güncelle (Sistem Ayarları › ANKA Updates ile aynı)
+anka-update status
+sudo anka-update apply
 ```
+
+Ayrıntılar: `docs/update-system.md`
 
 ## Geliştirme
 

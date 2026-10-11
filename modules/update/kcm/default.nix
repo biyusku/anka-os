@@ -1,34 +1,33 @@
-{ pkgs, lib, ... }:
+# ANKA OS — System Settings › ANKA Updates (built by ../default.nix)
+{ lib, stdenv, cmake, kdePackages, qt6 }:
 
-let
-  kcm-anka-update = pkgs.stdenv.mkDerivation {
-    pname = "kcm-anka-update";
-    version = "0.1.0";
+stdenv.mkDerivation {
+  pname = "kcm-anka-update";
+  version = "0.2.0";
 
-    src = ./.;
+  src = ./.;
 
-    nativeBuildInputs = with pkgs; [
-      cmake
-      kdePackages.extra-cmake-modules
-      kdePackages.wrapQtAppsHook
-    ];
+  nativeBuildInputs = [
+    cmake
+    kdePackages.extra-cmake-modules
+    kdePackages.wrapQtAppsHook
+  ];
 
-    buildInputs = with pkgs; [
-      qt6.qtbase
-      qt6.qtdeclarative
-      kdePackages.kcmutils
-      kdePackages.ki18n
-      kdePackages.kcoreaddons
-      kdePackages.kirigami
-    ];
+  buildInputs = [
+    qt6.qtbase
+    qt6.qtdeclarative
+    kdePackages.kcmutils
+    kdePackages.ki18n
+    kdePackages.kcoreaddons
+    kdePackages.kirigami
+  ];
 
-    meta = {
-      description = "ANKA OS KDE System Settings update panel";
-      license = lib.licenses.gpl2Plus;
-      platforms = lib.platforms.linux;
-    };
+  # A plugin, not an application: nothing to wrap.
+  dontWrapQtApps = true;
+
+  meta = {
+    description = "ANKA OS KDE System Settings update panel";
+    license = lib.licenses.gpl2Plus;
+    platforms = lib.platforms.linux;
   };
-in
-{
-  environment.systemPackages = [ kcm-anka-update ];
 }

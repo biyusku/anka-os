@@ -1,166 +1,100 @@
 # ANKA OS Update System
 
-Technical documentation for the automated update pipeline.
+How installed machines get new versions of ANKA.
 
-## Architecture Overview
+## How it works
 
-```
-GitHub (anka-os/anka)
-         │
-         │  push to main / tag v*
-         ▼
-  GitHub Actions ──────────────────────────────────────┐
-  build-iso.yml                                        │
-  ├── build iso-amd                                    │
-  ├── build iso-nvidia                                 │
-  └── build iso-intel                                  │
-         │                                             │
-         ▼                                             ▼
-    Cachix cache                              GitHub Release
-  (anka-os.cachix.org)                   (ISO artifacts)
+An installed machine's `/etc/nixos` is a flake with ANKA as its `anka` input
+(written by the installer, see `docs/installer.md`):
 
-Installed system (daily at 03:30)
-         │
-  anka-update-check.timer
-         │
-  anka-update-check.service
-  ├── reads /etc/anka-version
-  ├── queries GitHub API for latest release
-  ├── if newer: sends D-Bus desktop notification
-  └── if autoApply=true: starts anka-apply-update.service
-
-  anka-apply-update.service (manual or auto)
-  ├── nixos-rebuild switch --flake github:anka-os/anka
-  ├── success: updates /etc/anka-version, sends notification
-  └── failure: sends error notification (system is unchanged)
-
-KDE System Settings > ANKA Updates (KCM)
-  ├── shows current / available version
-  ├── "Güncelle" button → pkexec systemctl start anka-apply-update
-  ├── live log via journalctl
-  └── "Önceki Sürüme Dön" → nixos-rebuild switch --rollback
+```nix
+inputs.anka.url = "github:biyusku/anka-os";        # unstable: main branch
+inputs.anka.url = "github:biyusku/anka-os/v0.2.0"; # stable: a release tag
 ```
 
-## GitHub Actions Workflows
+Updating ANKA = pointing that input at a newer ANKA, locking it and rebuilding.
+All of it is done by one tool, `anka-update` (`modules/update/anka-update.sh`):
 
-### build-iso.yml
+```
+anka-update status [--json]   installed vs. newest version (no root needed)
+anka-update check             status + desktop notification (+ apply if autoApply)
+sudo anka-update apply        update to the newest ANKA for the channel
+sudo anka-update rollback     back to the ANKA used before the last update
+```
 
-Triggers on:
-- `push` to `main`
-- `push` of tags matching `v*` (produces a GitHub Release)
-- `pull_request` targeting `main`
-- `workflow_dispatch` (manual)
-- Weekly schedule (Mondays 09:00 UTC) — runs `update-flake-lock` job only
+| Channel | Follows |
+|---|---|
+| `stable` (default) | the newest `vX.Y.Z` tag; `main` until the first release |
+| `unstable` | the `main` branch |
 
-Jobs:
+`apply`:
+1. finds the newest version (`git ls-remote`, no API rate limits),
+2. asks GitHub's compare API whether it is actually newer, so a machine that is
+   already ahead of the newest release is never downgraded,
+3. backs up `flake.nix` / `flake.lock` to `/var/lib/anka-update/previous`,
+4. rewrites `inputs.anka.url`, runs `nix flake update anka` and
+   `nixos-rebuild switch --flake /etc/nixos#anka`,
+5. on failure restores both files (the running system is unchanged).
 
-**build-iso** (matrix: amd / nvidia / intel)
-1. Checkout source
-2. Install Nix with `nix-command flakes` experimental features
-3. Push build outputs to Cachix
-4. `nix flake check --no-build`
-5. `nix build .#packages.x86_64-linux.iso-<variant>`
-6. Upload ISO as a workflow artifact (14-day retention)
-7. On tag push: create a GitHub Release with the ISO attached
+`rollback` restores the backed-up files and rebuilds. The boot menu still lists
+every earlier generation as a last resort.
 
-**update-flake-lock**
-1. Runs `DeterminateSystems/update-flake-lock`
-2. Opens a PR titled `chore: update flake.lock`
-3. Labels the PR `dependencies` and `automated`
+## Pieces
 
-### test.yml
+```
+modules/update/default.nix      options, /etc/anka/update.conf, systemd units
+modules/update/anka-update.sh   the tool (writeShellApplication → shellcheck at build)
+modules/update/kcm/             System Settings › ANKA Updates (Qt6/KF6)
+```
 
-Triggers on `pull_request` and `push` to `main`.
+systemd units (all `Type=oneshot`):
 
-Runs:
-- `nix flake check` — evaluates all NixOS configurations
-- `nix build .#packages.x86_64-linux.iso-amd --dry-run` — validates derivation graph
-- `nix build .#nixosConfigurations.anka.config.system.build.toplevel --dry-run`
+| Unit | Runs | Started by |
+|---|---|---|
+| `anka-update-check` | `anka-update check` | timer: 5 min after boot, then every `checkInterval` |
+| `anka-apply-update` | `anka-update apply` | the KCM (`pkexec systemctl start …`) |
+| `anka-rollback` | `anka-update rollback` | the KCM |
 
-## Cachix Setup (for contributors)
+The units that rebuild have `restartIfChanged = false`, so the switch they
+run cannot restart (and kill) them. Notifications are sent to every logged-in
+user's session bus, once per new version.
 
-1. Create a free account at https://app.cachix.org
-2. Create a cache named `anka-os`
-3. Copy the public key shown in the cache settings
-4. Replace the placeholder in `flake.nix`:
-   ```nix
-   nixConfig.extra-trusted-public-keys = [
-     "anka-os.cachix.org-1:<YOUR_REAL_PUBLIC_KEY_HERE>"
-   ];
-   ```
-5. Add the signing key to your GitHub repository secrets as `CACHIX_AUTH_TOKEN`
-6. Users can enable the cache locally with:
+The KCM reads `anka-update status --json` and shows the journal of the two
+units after an update or rollback.
+
+## Options
+
+| Option | Default | Description |
+|---|---|---|
+| `anka.update.enable` | `true` (profile) | Update tooling, timer and KCM |
+| `anka.update.channel` | `"stable"` | `"stable"` or `"unstable"` |
+| `anka.update.repo` | `"biyusku/anka-os"` | GitHub owner/repo |
+| `anka.update.checkInterval` | `"6h"` | Time between checks |
+| `anka.update.autoApply` | `false` | Apply updates without asking |
+| `anka.update.notifyUser` | `true` | Desktop notification on new versions |
+| `anka.update.flakePath` | `"/etc/nixos"` | The machine's system flake |
+
+## Releasing a new version
+
+1. Bump `ANKA_VERSION` in `VERSION`.
+2. Commit, tag and push:
    ```bash
-   cachix use anka-os
-   ```
-
-## Building the KCM Module
-
-Requirements: CMake >= 3.20, Qt6, KF6 (ECM, CoreAddons, I18n, KCMUtils).
-
-```bash
-cd modules/update/kcm
-cmake -B build -DCMAKE_INSTALL_PREFIX=/usr
-cmake --build build -j$(nproc)
-sudo cmake --install build
-```
-
-On NixOS with the flake, the KCM can be added to the system packages derivation
-referencing the `kcm/` directory directly in a `stdenv.mkDerivation`.
-
-## Update Commands
-
-**Check for updates (CLI)**
-```bash
-anka-update-notify --check
-```
-
-**Apply update manually**
-```bash
-sudo nixos-rebuild switch --flake github:anka-os/anka
-```
-
-**Roll back to the previous generation**
-```bash
-sudo nixos-rebuild switch --rollback
-# or via the bootloader: select the previous entry at boot
-```
-
-**List available generations**
-```bash
-sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
-```
-
-## Updating the VERSION File
-
-The `VERSION` file at the repository root drives `/etc/anka-version` and the
-`system.nixos.label` bootloader entry.
-
-Steps for a new release:
-
-1. Update `VERSION`:
-   ```bash
-   echo "0.2.0" > VERSION
-   ```
-2. Commit and tag:
-   ```bash
-   git add VERSION
-   git commit -m "chore(release): bump version to 0.2.0"
    git tag -s v0.2.0 -m "Release v0.2.0"
    git push origin main --tags
    ```
-3. The `build-iso.yml` workflow triggers automatically and creates a GitHub Release.
-4. Generate a changelog with git-cliff:
-   ```bash
-   git cliff --tag v0.2.0 -o CHANGELOG.md
-   ```
+3. `build-iso.yml` builds the ISOs and creates the GitHub Release.
+   Machines on the `stable` channel see the update at their next check.
+4. Changelog: `git cliff --tag v0.2.0 -o CHANGELOG.md`
 
-## NixOS Module Options
+## CI
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `anka.update.enable` | bool | `true` | Enable update check system |
-| `anka.update.channel` | enum | `"stable"` | `"stable"` or `"nightly"` |
-| `anka.update.schedule` | str | `"*-*-* 03:30:00"` | systemd calendar expression |
-| `anka.update.repoUrl` | str | `"github:anka-os/anka"` | Flake URL for `nixos-rebuild` |
-| `anka.update.autoApply` | bool | `false` | Auto-apply when update found |
+- `test.yml`: `nix flake check` evaluates every configuration and **builds**
+  the `checks` (anka-update, the KCM); installer unit tests run separately.
+- `build-iso.yml`: ISOs for amd / nvidia / intel; releases on `v*` tags;
+  weekly `flake.lock` update PR.
+
+## Cachix (for maintainers)
+
+1. Create a cache named `anka-os` at https://app.cachix.org
+2. Put its public key in `flake.nix` (`nixConfig.extra-trusted-public-keys`)
+3. Add the auth token to the repository secrets as `CACHIX_AUTH_TOKEN`

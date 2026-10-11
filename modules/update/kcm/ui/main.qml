@@ -19,7 +19,7 @@ KCMUtils.SimpleKCM {
             Layout.fillWidth: true
             visible: kcm.updateAvailable && !kcm.updating
             type: Kirigami.MessageType.Positive
-            text: qsTr("ANKA OS %1 sürümü mevcut.").arg(kcm.availableVersion)
+            text: qsTr("ANKA %1 yüklenebilir.").arg(kcm.availableVersion)
 
             actions: [
                 Kirigami.Action {
@@ -30,9 +30,7 @@ KCMUtils.SimpleKCM {
                 Kirigami.Action {
                     text: qsTr("Değişiklik Notları")
                     icon.name: "internet-web-browser"
-                    onTriggered: Qt.openUrlExternally(
-                        "https://github.com/biyusku/anka-os/releases/tag/v" + kcm.availableVersion
-                    )
+                    onTriggered: Qt.openUrlExternally(kcm.releaseNotesUrl)
                 }
             ]
         }
@@ -56,15 +54,19 @@ KCMUtils.SimpleKCM {
             QQC2.Label {
                 Kirigami.FormData.label: qsTr("Durum:")
                 text: {
-                    if (kcm.updating)        return qsTr("Güncelleniyor…")
-                    if (kcm.updateAvailable) return qsTr("Güncelleme mevcut: %1").arg(kcm.availableVersion)
+                    if (kcm.updating)               return qsTr("Güncelleniyor…")
+                    if (kcm.checking)               return qsTr("Kontrol ediliyor…")
+                    if (kcm.statusError.length > 0) return kcm.statusError
+                    if (kcm.updateAvailable)        return qsTr("Güncelleme mevcut: %1").arg(kcm.availableVersion)
                     return qsTr("Sistem güncel")
                 }
                 color: {
-                    if (kcm.updating)        return Kirigami.Theme.neutralTextColor
-                    if (kcm.updateAvailable) return Kirigami.Theme.positiveTextColor
+                    if (kcm.updating)               return Kirigami.Theme.neutralTextColor
+                    if (kcm.statusError.length > 0) return Kirigami.Theme.negativeTextColor
+                    if (kcm.updateAvailable)        return Kirigami.Theme.positiveTextColor
                     return Kirigami.Theme.textColor
                 }
+                wrapMode: Text.WordWrap
             }
         }
 
@@ -108,10 +110,11 @@ KCMUtils.SimpleKCM {
         // "System is up to date" placeholder
         Kirigami.PlaceholderMessage {
             Layout.fillWidth: true
-            visible: !kcm.updateAvailable && !kcm.updating && kcm.updateLog.length === 0
+            visible: !kcm.updateAvailable && !kcm.updating && !kcm.checking
+                     && kcm.statusError.length === 0 && kcm.updateLog.length === 0
             icon.name: "security-high"
             text: qsTr("Sistem Güncel")
-            explanation: qsTr("ANKA OS %1 en son sürüm.").arg(kcm.currentVersion)
+            explanation: qsTr("ANKA %1 en son sürüm.").arg(kcm.currentVersion)
         }
 
         // ── Action buttons ────────────────────────────────────────────────────
@@ -122,7 +125,7 @@ KCMUtils.SimpleKCM {
             QQC2.Button {
                 text: qsTr("Güncellemeleri Kontrol Et")
                 icon.name: "view-refresh"
-                enabled: !kcm.updating
+                enabled: !kcm.updating && !kcm.checking
                 onClicked: kcm.checkForUpdates()
             }
 
@@ -162,10 +165,10 @@ KCMUtils.SimpleKCM {
     // ── Rollback confirmation dialog ─────────────────────────────────────────
     Kirigami.PromptDialog {
         id: rollbackDialog
-        title: qsTr("Rollback Onayı")
+        title: qsTr("Önceki Sürüme Dön")
         subtitle: qsTr(
-            "Sistemi bir önceki NixOS nesline geri almak istiyor musunuz? " +
-            "Bu işlem mevcut oturumu kapatabilir."
+            "ANKA son güncellemeden önceki sürümüne geri alınsın mı? " +
+            "Bu işlem birkaç dakika sürebilir."
         )
         standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
         onAccepted: kcm.rollback()
