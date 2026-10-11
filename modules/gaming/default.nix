@@ -90,9 +90,7 @@ in
           libxscrnsaver
         ];
       };
-      extraCompatPackages = with pkgs; [
-        proton-ge-bin     # GE-Proton from nixpkgs (auto-updated)
-      ];
+      # GE-Proton: anka.compat.windows.geProton
     };
 
     # ── Gamescope ─────────────────────────────────────────────────────────

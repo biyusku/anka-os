@@ -32,6 +32,15 @@ in
       description = "Default web browser.";
     };
 
+    desktopApps = lib.mkOption {
+      type    = lib.types.bool;
+      default = true;
+      description = ''
+        Install the everyday desktop apps: LibreOffice, GIMP, Signal,
+        Bitwarden and Obsidian (VLC is always installed).
+      '';
+    };
+
     extraPackages = lib.mkOption {
       type    = lib.types.listOf lib.types.package;
       default = [];
@@ -44,17 +53,24 @@ in
     # ── Flatpak ───────────────────────────────────────────────────────────
     services.flatpak.enable = lib.mkIf cfg.flatpak true;
 
-    # Add Flathub remote on first boot
-    system.activationScripts.flatpakFlathub = lib.mkIf cfg.flatpak {
-      deps = [];
-      text = ''
-        if ${pkgs.flatpak}/bin/flatpak remotes 2>/dev/null | grep -q flathub; then
-          true  # already configured
-        else
-          ${pkgs.flatpak}/bin/flatpak remote-add --if-not-exists flathub \
-            https://dl.flathub.org/repo/flathub.flatpakrepo || true
-        fi
+    # Add the Flathub remote once the network is up (not in an activation
+    # script: on the first boot there is no network yet). Retries until it
+    # succeeds; Discover lists Flathub apps from then on.
+    systemd.services.flatpak-flathub = lib.mkIf cfg.flatpak {
+      description = "Add the Flathub Flatpak repository";
+      wantedBy = [ "multi-user.target" ];
+      after    = [ "network-online.target" ];
+      wants    = [ "network-online.target" ];
+      path     = [ pkgs.flatpak ];
+      script   = ''
+        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
       '';
+      serviceConfig = {
+        Type            = "oneshot";
+        RemainAfterExit = true;
+        Restart         = "on-failure";
+        RestartSec      = "30s";
+      };
     };
 
     # ── Terminal ──────────────────────────────────────────────────────────
@@ -99,14 +115,14 @@ in
       ]
 
       # Core GUI apps
-      [
+      [ vlc ]
+      (lib.optionals cfg.desktopApps [
         libreoffice-qt
         gimp
-        vlc
         signal-desktop
         bitwarden-desktop  # password manager
         obsidian           # note taking
-      ]
+      ])
 
       # System utilities
       [

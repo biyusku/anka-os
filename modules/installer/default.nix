@@ -1,89 +1,46 @@
-# ANKA OS — First-run setup wizard module
-# Runs once after the user's first login to guide initial configuration.
+# ANKA OS — first-login welcome
+# Runs once per user when their first Plasma session starts.
 { config, lib, pkgs, ... }:
 
 let
   cfg = config.anka.installer;
 
-  # Bundle the wizard script as a derivation so it lands in the store
-  firstRunWizard = pkgs.writeScriptBin "anka-first-run" (
-    builtins.readFile ./first-run-wizard.sh
-  );
-
+  firstRunWizard = pkgs.writeShellApplication {
+    name = "anka-first-run";
+    runtimeInputs = with pkgs; [ coreutils gnused kdePackages.kdialog ];
+    text = builtins.readFile ./first-run-wizard.sh;
+  };
 in
 {
-  # ── Option declaration ────────────────────────────────────────────────────
   options.anka.installer = {
     enable = lib.mkOption {
       type        = lib.types.bool;
       default     = true;
       description = ''
-        Enable the ANKA first-run setup wizard.
-        The wizard runs once per user after the first login and guides
-        the user through language, use-case, and AI assistant configuration.
+        Show the ANKA welcome once per user after their first login
+        (AI assistant on/off and where to find things).
       '';
     };
   };
 
-  # ── Configuration ─────────────────────────────────────────────────────────
   config = lib.mkIf cfg.enable {
+    environment.systemPackages = [ firstRunWizard ];
 
-    # Make the wizard script available system-wide
-    environment.systemPackages = [
-      firstRunWizard
-      pkgs.kdePackages.kdialog   # Qt dialog toolkit used by the wizard
-    ];
-
-    # ── Systemd user service ────────────────────────────────────────────────
-    # This service is enabled per-user via the home-manager module or by
-    # placing the .service file in ~/.config/systemd/user/. We ship it as
-    # a system-wide template so any user who logs in gets it.
-    systemd.user.services.anka-first-run = {
-      description = "ANKA OS First-Run Setup Wizard";
-
-      # Run after the graphical session is ready
-      after    = [ "graphical-session.target" ];
-      requires = [ "graphical-session.target" ];
-      wantedBy = [ "graphical-session.target" ];
-
-      serviceConfig = {
-        Type            = "oneshot";
-        ExecStart       = "${firstRunWizard}/bin/anka-first-run";
-        RemainAfterExit = false;
-
-        # Only run if the sentinel file does not yet exist
-        ExecCondition = pkgs.writeShellScript "anka-check-setup" ''
-          test ! -f "$HOME/.anka-setup-done"
-        '';
-
-        # Restart policy: never restart automatically
-        Restart    = "no";
-
-        # Give the desktop time to settle before showing dialogs
-        ExecStartPre = "${pkgs.coreutils}/bin/sleep 5";
-      };
-
-      # Run in the graphical environment so kdialog can reach the display
-      environment = {
-        DISPLAY     = ":0";
-        WAYLAND_DISPLAY = "wayland-0";
-        XDG_RUNTIME_DIR = "/run/user/%U";
-      };
-    };
-
-    # ── KDE Autostart shortcut ──────────────────────────────────────────────
-    # Plasma reads ~/.config/autostart/ — we ship the .desktop file into the
-    # system-wide XDG autostart directory so Plasma picks it up automatically.
+    # Plasma starts XDG autostart entries with the session; the script
+    # itself exits at once when the user was already welcomed.
     environment.etc."xdg/autostart/anka-first-run.desktop".text = ''
       [Desktop Entry]
       Type=Application
-      Name=ANKA First-Run Setup
-      Comment=Configure ANKA OS on first login
+      Name=ANKA Welcome
+      Comment=Welcome to ANKA OS
       Exec=${firstRunWizard}/bin/anka-first-run
+      Icon=system-software-install
       Terminal=false
-      Hidden=false
-      X-GNOME-Autostart-enabled=true
-      X-KDE-autostart-condition=anka-first-run:General:Completed:false
+      NoDisplay=true
+      X-KDE-autostart-phase=2
     '';
+
+    # Built by `nix flake check` (see checks in flake.nix)
+    system.build.ankaFirstRun = firstRunWizard;
   };
 }

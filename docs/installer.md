@@ -11,10 +11,13 @@ Masaüstündeki **Install ANKA OS** kısayolu da aynı programı açar.
 3. **Klavye**
 4. **Kullanıcı:** ad, kullanıcı adı ve parola girilir. Yönetici (root) hesabı
    varsayılan olarak aynı parolayı kullanır.
-5. **Disk:** varsayılan dosya sistemi Btrfs'tir (`@`, `@home`, `@nix`,
+5. **Kurulum türü:** `ANKA` (her şey dahil) veya `ANKA Hafif` (eski/küçük
+   bilgisayarlar: yerel AI, Lutris/Heroic/Discord/Bottles ve ofis paketi yok,
+   hepsi sonradan Discover'dan kurulabilir) → `anka.profile`.
+6. **Disk:** varsayılan dosya sistemi Btrfs'tir (`@`, `@home`, `@nix`,
    `@snapshots` alt hacimleri ve snapper anlık görüntüleri). ext4 ve LUKS
    şifreleme de seçilebilir. Swap bölümü oluşturulmaz, zram kullanılır.
-6. **Özet** → kurulum → **Bitti**
+7. **Özet** → kurulum → **Bitti**
 
 ## Arka planda olanlar
 

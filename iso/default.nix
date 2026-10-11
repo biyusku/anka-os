@@ -120,7 +120,7 @@
     NIXOS_OZONE_WL       = "1";
     XDG_SESSION_TYPE     = "wayland";
     QT_QPA_PLATFORM      = "wayland";
-    SDL_VIDEODRIVER      = "wayland";
+    SDL_VIDEODRIVER      = "wayland,x11";
     MOZ_ENABLE_WAYLAND   = "1";
   };
 

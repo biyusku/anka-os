@@ -191,10 +191,10 @@ def build_configuration(settings):
     """
     Render configuration.nix from the installer choices.
 
-    *settings* keys: firmware ("efi" | "bios"), boot_device, root_fs,
-    root_luks, btrfs_mounts, gpu (from detect_gpu), hostname, timezone,
-    locale, locale_extra (dict), kb_layout, kb_variant, vconsole,
-    username, fullname, autologin, state_version.
+    *settings* keys: profile ("full" | "light"), firmware ("efi" | "bios"),
+    boot_device, root_fs, root_luks, btrfs_mounts, gpu (from detect_gpu),
+    hostname, timezone, locale, locale_extra (dict), kb_layout, kb_variant,
+    vconsole, username, fullname, autologin, state_version.
     """
     out = [
         "# ANKA OS — this computer's settings (written by the ANKA installer).",
@@ -204,6 +204,10 @@ def build_configuration(settings):
         "{ config, lib, pkgs, ... }:",
         "",
         "{",
+        "  # ── ANKA ──────────────────────────────────────────────────────────────",
+        '  # "full" or "light" (no local AI, game launchers or office suite)',
+        "  anka.profile = {};".format(nix_str(settings.get("profile") or "full")),
+        "",
         "  # ── Boot ──────────────────────────────────────────────────────────────",
     ]
     if settings["firmware"] == "efi":
@@ -329,6 +333,7 @@ def _collect_settings(gs, gpu, state_version):
     boot_loader = gs.value("bootLoader")
 
     settings = {
+        "profile": "light" if gs.value("packagechooser_packagechooser") == "light" else "full",
         "firmware": "efi" if gs.value("firmwareType") == "efi" else "bios",
         "boot_device": boot_loader.get("installPath") if boot_loader else None,
         "root_fs": root.get("fs"),

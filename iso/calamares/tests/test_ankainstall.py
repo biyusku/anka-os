@@ -163,6 +163,7 @@ def settings(**overrides):
 class BuildConfiguration(unittest.TestCase):
     def test_efi_btrfs_desktop(self):
         cfg = ankainstall.build_configuration(settings())
+        self.assertIn('anka.profile = "full";', cfg)
         self.assertIn('anka.boot.loader = "systemd-boot";', cfg)
         self.assertNotIn("grubDevice", cfg)
         self.assertIn('anka.filesystem.rootFormat = "btrfs";', cfg)
@@ -184,8 +185,9 @@ class BuildConfiguration(unittest.TestCase):
         cfg = ankainstall.build_configuration(settings(
             firmware="bios", boot_device="/dev/sda", root_fs="ext4", root_luks=True, btrfs_mounts=[],
             gpu={"type": "intel+nvidia", "open": True, "intelBusId": "PCI:0:2:0", "nvidiaBusId": "PCI:1:0:0"},
-            autologin=True,
+            autologin=True, profile="light",
         ))
+        self.assertIn('anka.profile = "light";', cfg)
         self.assertIn('anka.boot.loader = "grub";', cfg)
         self.assertIn('anka.boot.grubDevice = "/dev/sda";', cfg)
         self.assertIn("boot.loader.grub.enableCryptodisk = true;", cfg)
@@ -280,6 +282,7 @@ class Run(unittest.TestCase):
                 "localeConf": {"LANG": "tr_TR.UTF-8/UTF-8", "LC_TIME": "tr_TR.UTF-8/UTF-8"},
                 "keyboardLayout": "us", "keyboardVariant": "",
                 "username": "ayse", "fullname": "Ayse",
+                "packagechooser_packagechooser": "light",
             }),
             job=types.SimpleNamespace(
                 configuration={
@@ -311,6 +314,7 @@ class Run(unittest.TestCase):
         self.assertEqual((etc / "flake.lock").read_text(), '{"version": 7}')
         config = (etc / "configuration.nix").read_text()
         self.assertIn('anka.gpu.type = "nvidia";', config)
+        self.assertIn('anka.profile = "light";', config)
         self.assertIn('time.timeZone = "Europe/Istanbul";', config)
         self.assertIn('system.stateVersion = "26.11";', config)
         self.assertIn('"subvol=@home"', (etc / "hardware-configuration.nix").read_text())

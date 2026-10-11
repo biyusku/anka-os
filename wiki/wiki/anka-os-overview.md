@@ -25,6 +25,7 @@ flake.nix
 
 - `modules/default.nix` — tüm ANKA modüllerini içe aktarır
 - `profiles/default.nix` — ANKA'nın varsayılan ayarları (hepsi `lib.mkDefault`)
+- `profiles/light.nix` — `anka.profile = "light"`: yerel AI, oyun başlatıcıları, Bottles ve ofis paketi kapalı (kurulumda seçilir)
 - `flake.lock` — tüm girdiler sabitlenmiştir; güncelleme `nix flake update` ile yapılır
 - Kurulum programı: `iso/calamares/` → ayrıntılar `docs/installer.md`
 

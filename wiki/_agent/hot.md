@@ -19,12 +19,16 @@ Son güncelleme: 2026-10-11
 - AI paketi derleniyor ve çalışıyor (uçtan uca D-Bus testi); MCP sunucuları fastmcp 3'e
   uyarlandı ve paketlendi; NVIDIA'dan CUDA toolkit, AMD'den ROCm kaldırıldı; Ollama Vulkan.
 
+- Hafif profil + kurulumda "ANKA / ANKA Hafif" seçimi; ilk açılış sihirbazı sadeleşti
+  (karşılama + AI aç/kapa + ipuçları, iki kez açılma hatası giderildi).
+- GE-Proton artık nixpkgs proton-ge-bin (aktivasyonda curl + `exit 0` kaldırıldı);
+  Flathub ağ hazır olunca servisle ekleniyor; SDL_VIDEODRIVER=wayland,x11.
+- Tam sistem derlemesi (AMD, sanal makine): gerçek derleme hatası yok; sadece
+  sandbox proxy'sinin engellediği indirmeler (Steam, Discord, firmware) başarısız.
+
 ## Sıradaki işler
 
 - AI: daemon çalışıyor ama intent/router/memory/voice/confirmation_gate hâlâ bağlı değil;
   bir arayüz (plasmoid / KRunner) yok, sadece `anka-ai` terminal komutu var.
-- Sihirbaz (`modules/installer/first-run-wizard.sh`) seçimleri çoğunlukla uygulanmıyor
-  (sadece AI_MODE okunuyor).
-- "Hafif" profil (7B model, Steam vb. kapalı) ve kurulumda profil seçimi.
 - SteamOS özellikleri: Jovian-NixOS (Oyun Modu). (scx_lavd ve NTSYNC tamam.)
 - ISO'yu gerçek donanımda / QEMU'da uçtan uca test et.

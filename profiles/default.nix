@@ -4,6 +4,9 @@
 { lib, ... }:
 
 {
+  # anka.profile = "light" trims the extras (see light.nix).
+  imports = [ ./light.nix ];
+
   # Firmware for GPUs, Wi-Fi/Bluetooth chips and CPU microcode updates.
   # Off by default on NixOS; without it AMD graphics and most wireless
   # cards don't work.

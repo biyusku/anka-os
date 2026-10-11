@@ -145,9 +145,7 @@ in
       xdg-user-dirs
       qt6.qtwayland
 
-      # Misc desktop
-      firefox
-      libreoffice-qt
+      # Misc desktop (the browser and office suite come from modules/apps)
     ];
 
     # ── Qt / GTK Wayland environment ──────────────────────────────────────
@@ -157,7 +155,8 @@ in
       QT_WAYLAND_DISABLE_WINDOWDECORATION = lib.mkIf cfg.wayland "1";
       GDK_BACKEND          = lib.mkIf cfg.wayland "wayland,x11";
       MOZ_ENABLE_WAYLAND   = lib.mkIf cfg.wayland "1";
-      SDL_VIDEODRIVER      = lib.mkIf cfg.wayland "wayland";
+      # Fall back to X11: many games bundle an SDL without Wayland support
+      SDL_VIDEODRIVER      = lib.mkIf cfg.wayland "wayland,x11";
       CLUTTER_BACKEND      = lib.mkIf cfg.wayland "wayland";
     };
 

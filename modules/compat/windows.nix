@@ -12,15 +12,10 @@ in
       enable = lib.mkOption {
         type    = lib.types.bool;
         default = true;
-        description = "Install GE-Proton (community Proton build with extra patches).";
-      };
-
-      version = lib.mkOption {
-        type    = lib.types.str;
-        default = "GE-Proton9-27";
         description = ''
-          GE-Proton release tag to install into ~/.steam/root/compatibilitytools.d/.
-          See https://github.com/GloriousEggroll/proton-ge-custom/releases.
+          Offer GE-Proton (community Proton build with extra patches) in
+          Steam's compatibility tools. Uses nixpkgs' proton-ge-bin, which is
+          updated with the rest of the system.
         '';
       };
     };
@@ -92,40 +87,11 @@ in
       (lib.optional cfg.protontricks protontricks)
       (lib.optional cfg.bottles bottles)
       (lib.optional cfg.ntfs.enable ntfs3g)
-
-      # Useful companions
-      [ lutris heroic ]
+      # Lutris / Heroic: anka.gaming.lutris / anka.gaming.heroic
     ];
 
-    # ── GE-Proton — deployed via activation script ────────────────────────────
-    # We fetch the tarball and unpack into the system-wide compatibility tools
-    # directory. Each user symlinks it into ~/.steam/root/compatibilitytools.d/.
-    system.activationScripts.geProton = lib.mkIf cfg.geProton.enable {
-      deps = [];
-      text = let
-        destDir = "/var/lib/anka/ge-proton";
-        tag     = cfg.geProton.version;
-        # The archive URL pattern GloriousEggroll uses
-        archiveUrl = "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${tag}/${tag}.tar.gz";
-      in ''
-        DEST="${destDir}/${tag}"
-        if [ ! -d "$DEST" ]; then
-          echo "ANKA: downloading GE-Proton ${tag}..."
-          mkdir -p "${destDir}"
-          TMP=$(${pkgs.coreutils}/bin/mktemp -d)
-          ${pkgs.curl}/bin/curl -L --retry 3 -o "$TMP/ge-proton.tar.gz" \
-            "${archiveUrl}" || { echo "GE-Proton download failed — skipping"; rm -rf "$TMP"; exit 0; }
-          ${pkgs.gnutar}/bin/tar xzf "$TMP/ge-proton.tar.gz" -C "${destDir}"
-          rm -rf "$TMP"
-          echo "ANKA: GE-Proton ${tag} installed to $DEST"
-        fi
-
-        # Create a system-wide symlink so all users can find it
-        COMPAT_DIR="/var/lib/anka/compat-tools"
-        mkdir -p "$COMPAT_DIR"
-        ln -sfn "$DEST" "$COMPAT_DIR/${tag}"
-      '';
-    };
+    # ── GE-Proton in Steam's compatibility tools ──────────────────────────────
+    programs.steam.extraCompatPackages = lib.mkIf cfg.geProton.enable [ pkgs.proton-ge-bin ];
 
     # ── NTFS driver selection ─────────────────────────────────────────────────
     boot.extraModprobeConfig = lib.mkIf (cfg.ntfs.enable && cfg.ntfs.driver == "ntfs3") ''
