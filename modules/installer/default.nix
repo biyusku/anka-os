@@ -5,9 +5,11 @@
 let
   cfg = config.anka.installer;
 
+  ankaUi = pkgs.callPackage ../../pkgs/anka-ui { };
+
   firstRunWizard = pkgs.writeShellApplication {
     name = "anka-first-run";
-    runtimeInputs = with pkgs; [ coreutils gnused kdePackages.kdialog ];
+    runtimeInputs = [ pkgs.coreutils pkgs.gnused ankaUi ];
     text = builtins.readFile ./first-run-wizard.sh;
   };
 in
@@ -34,7 +36,7 @@ in
       Name=ANKA Welcome
       Comment=Welcome to ANKA OS
       Exec=${firstRunWizard}/bin/anka-first-run
-      Icon=system-software-install
+      Icon=anka
       Terminal=false
       NoDisplay=true
       X-KDE-autostart-phase=2
@@ -42,5 +44,6 @@ in
 
     # Built by `nix flake check` (see checks in flake.nix)
     system.build.ankaFirstRun = firstRunWizard;
+    system.build.ankaUi = ankaUi;
   };
 }

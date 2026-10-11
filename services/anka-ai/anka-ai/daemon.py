@@ -33,10 +33,19 @@ DBUS_INTERFACE = "org.anka.AI"
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_MODEL = os.environ.get("ANKA_AI_MODEL", "qwen2.5:7b")
-KDIALOG = os.environ.get("ANKA_KDIALOG", "kdialog")
+ANKA_UI = os.environ.get("ANKA_UI", "anka-ui")  # answer window (pkgs/anka-ui)
 KRUNNER_PATH = "/krunner"
 KRUNNER_INTERFACE = "org.kde.krunner1"
 KRUNNER_TRIGGERS = ("ai ", "? ")
+TURKISH = os.environ.get("LANG", "").startswith("tr")
+
+
+def _(turkish, english):
+    """The user-facing text in the session's language (Turkish or English)."""
+    return turkish if TURKISH else english
+
+
+KRUNNER_SUBTEXT = _("Enter → ANKA AI'ye sor", "Enter → ask ANKA AI")
 SETUP_CONF = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "anka" / "setup.conf"
 MAX_HISTORY = 20
 
@@ -129,20 +138,35 @@ class AnkaAIService(dbus.service.Object):
         never a status query.
         """
         if read_ai_mode() == "none":
-            return "ANKA AI is turned off. Turn it on again in ~/.config/anka/setup.conf (AI_MODE=local)."
+            return _(
+                "ANKA AI kapalı. Açmak için ~/.config/anka/setup.conf dosyasına AI_MODE=local yaz.",
+                "ANKA AI is turned off. To turn it on, set AI_MODE=local in ~/.config/anka/setup.conf.",
+            )
         try:
             if self.models.installed():
                 return None
         except requests.RequestException as e:
             logger.error("Ollama not reachable: %s", e)
-            return "ANKA AI can't reach Ollama. Is ollama.service running?"
+            return _(
+                "ANKA AI şu an çalışmıyor (Ollama'ya ulaşılamadı).",
+                "ANKA AI isn't running right now (can't reach Ollama).",
+            )
         if self.models.pull_error:
-            return f"Downloading {self.models.model} failed: {self.models.pull_error}"
+            return _(
+                f"Model indirilemedi ({self.models.model}): {self.models.pull_error}",
+                f"Downloading {self.models.model} failed: {self.models.pull_error}",
+            )
         if start_download:
             self.models.ensure_pulling()
         if self.models.pulling:
-            return f"ANKA AI is downloading its model ({self.models.model}). Try again in a few minutes."
-        return f"The model ({self.models.model}) is downloaded the first time you ask a question."
+            return _(
+                f"ANKA AI modelini indiriyor ({self.models.model}). Birkaç dakika sonra tekrar sor.",
+                f"ANKA AI is downloading its model ({self.models.model}). Ask again in a few minutes.",
+            )
+        return _(
+            f"Model ({self.models.model}) ilk soruda indirilir.",
+            f"The model ({self.models.model}) is downloaded the first time you ask a question.",
+        )
 
     @dbus.service.method(DBUS_INTERFACE, in_signature="s", out_signature="s")
     def Ask(self, question):
@@ -167,7 +191,7 @@ class AnkaAIService(dbus.service.Object):
         except (requests.RequestException, KeyError, ValueError) as e:
             self.conversation_history.pop()
             logger.error("Ask failed: %s", e)
-            return json.dumps({"success": False, "error": f"Ollama error: {e}"})
+            return json.dumps({"success": False, "error": _(f"Ollama hatası: {e}", f"Ollama error: {e}")})
 
         self.conversation_history.append({"role": "assistant", "content": answer})
         self.conversation_history = self.conversation_history[-MAX_HISTORY:]
@@ -235,10 +259,10 @@ class AnkaKRunner(dbus.service.Object):
             (
                 question,                      # match id: the question itself
                 f"ANKA AI: {question}",
-                "anka",                        # icon (falls back to a generic one)
+                "anka-ai",                     # icon (modules/branding)
                 dbus.Int32(100),               # ExactMatch
                 dbus.Double(1.0),
-                dbus.Dictionary({"subtext": "Enter → ask ANKA AI"}, signature="sv"),
+                dbus.Dictionary({"subtext": KRUNNER_SUBTEXT}, signature="sv"),
             ),
             signature="sssida{sv}",
         )
@@ -250,12 +274,20 @@ class AnkaKRunner(dbus.service.Object):
         threading.Thread(target=self._answer, args=(match_id,), daemon=True).start()
 
     def _answer(self, question):
-        result = json.loads(self.ai.Ask(question))
-        text = result.get("response") or result.get("error") or "No answer."
+        # The window opens at once ("Thinking…") and shows the answer when
+        # it arrives on its stdin.
         try:
-            subprocess.run([KDIALOG, "--title", "ANKA AI", "--msgbox", f"{question}\n\n{text}"], check=False)
+            window = subprocess.Popen([ANKA_UI, "answer", question], stdin=subprocess.PIPE)
         except OSError as e:
-            logger.error("Can't show the answer with %s: %s", KDIALOG, e)
+            logger.error("Can't open the answer window (%s): %s", ANKA_UI, e)
+            window = None
+        result = json.loads(self.ai.Ask(question))
+        text = result.get("response") or result.get("error") or ""
+        if window is not None:
+            try:
+                window.communicate(text.encode())
+            except OSError:
+                pass  # closed before the answer arrived
 
 
 def main():

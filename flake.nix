@@ -149,6 +149,8 @@
       anka-update     = self.nixosConfigurations.anka.config.system.build.ankaUpdate;
       kcm-anka-update = self.nixosConfigurations.anka.config.system.build.kcmAnkaUpdate;
       anka-ai         = self.nixosConfigurations.anka.config.system.build.ankaAi;
+      anka-ui         = self.nixosConfigurations.anka.config.system.build.ankaUi;
+      anka-boot-artwork = self.nixosConfigurations.anka.config.system.build.ankaBootArtwork;
       anka-mcp        = self.nixosConfigurations.anka.config.system.build.ankaMcpServers;
       anka-first-run  = self.nixosConfigurations.anka.config.system.build.ankaFirstRun;
       anka-artwork    = self.nixosConfigurations.anka.config.system.build.ankaArtwork;

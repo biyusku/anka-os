@@ -137,7 +137,7 @@ in
       wantedBy = [ "graphical-session.target" ];
 
       environment = {
-        ANKA_KDIALOG  = "${pkgs.kdePackages.kdialog}/bin/kdialog";   # KRunner answers
+        ANKA_UI       = "${pkgs.callPackage ../../pkgs/anka-ui { }}/bin/anka-ui";   # KRunner answers
         ANKA_AI_MODEL = cfg.localModel;
         OLLAMA_HOST   = "http://localhost:${toString cfg.port}";
       };
