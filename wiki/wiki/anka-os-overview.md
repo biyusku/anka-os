@@ -47,7 +47,6 @@ flake.nix
 | `compat/windows.nix` | GE-Proton, umu-launcher, Bottles, NTFS |
 | `compat/media.nix` | DVD, VAAPI, HW decode, media codecs |
 | `accessibility/` | Orca, büyük fontlar (opt-in) |
-| `adobe/` | Adobe uyumluluk katmanı (opt-in) |
 | `update/` | Güncelleme sistemi + KDE KCM |
 | `installer/` | First-run wizard |
 
