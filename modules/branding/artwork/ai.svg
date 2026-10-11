@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>ANKA AI</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c0392b"/>
+      <stop offset="1" stop-color="#f39c12"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="56" fill="url(#tile)"/>
+  <!-- Sparkles -->
+  <path fill="#fff" d="M120 64c7 38 22 53 60 60-38 7-53 22-60 60-7-38-22-53-60-60 38-7 53-22 60-60z"/>
+  <path fill="#fff" opacity="0.85" d="M184 52c3 15 9 21 24 24-15 3-21 9-24 24-3-15-9-21-24-24 15-3 21-9 24-24z"/>
+</svg>

@@ -108,7 +108,8 @@ in
         forceFontDPI=${toString cfg.dpi}
       '';
     };
-    environment.etc."xdg/kdeglobals" = lib.mkIf cfg.highContrast {
+    # (With the ANKA look on, modules/branding writes kdeglobals itself.)
+    environment.etc."xdg/kdeglobals" = lib.mkIf (cfg.highContrast && !(config.anka.branding.enable or false)) {
       text = ''
         [KDE]
         contrast=10

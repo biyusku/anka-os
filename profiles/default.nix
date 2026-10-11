@@ -17,7 +17,7 @@
     boot = {
       loader   = "systemd-boot";
       plymouth = true;
-      timeout  = 3;
+      timeout  = 0;   # menu hidden; hold Space at power-on to show it
     };
     kernel.variant = "linux_zen";   # prebuilt; CachyOS compiles on the machine
 

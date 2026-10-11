@@ -76,12 +76,9 @@
     options = "grp:alt_shift_toggle";
   };
 
-  # ── Boot: Plymouth splash ──────────────────────────────────────────────────
+  # ── Boot: ANKA splash (theme from modules/branding) ───────────────────────
   boot = {
-    plymouth = {
-      enable  = true;
-      theme   = "spinner";
-    };
+    plymouth.enable = true;
     # Quiet boot for polished UX
     kernelParams = [
       "quiet"
@@ -159,8 +156,8 @@
   isoImage = {
     volumeID            = "anka-OS";
     squashfsCompression = "zstd -Xcompression-level 19";
-    # Sticker for the ISO menu
-    appendToMenuLabel = " ANKA OS Live";
+    # Boot menu: "ANKA OS", then the safe-graphics and RAM variants
+    appendToMenuLabel = "";
   };
 
   # ── Desktop shortcut for the installer ────────────────────────────────────
@@ -232,5 +229,7 @@
   };
 
   # ── System label ──────────────────────────────────────────────────────────
+  # Boot menu entries read "ANKA OS Live" rather than a NixOS version number.
+  system.nixos.label = "Live";
   system.stateVersion = "25.11";
 }

@@ -20,8 +20,13 @@ in
 
     timeout = lib.mkOption {
       type    = lib.types.int;
-      default = 3;
-      description = "Boot menu timeout in seconds.";
+      default = 0;
+      description = ''
+        Seconds the boot menu waits. 0 hides it: the computer starts ANKA
+        straight away, and holding Space (or Shift/Esc with GRUB) while it
+        powers on shows the menu (older versions, other systems). The
+        installer sets 5 when it finds Windows on the computer.
+      '';
     };
 
     plymouth = lib.mkOption {
@@ -48,12 +53,13 @@ in
       enable  = true;
       device  = cfg.grubDevice;
       useOSProber = true;
+      timeoutStyle = if cfg.timeout == 0 then "hidden" else "menu";
     };
 
     # ── Plymouth splash screen ────────────────────────────────────────────
     boot.plymouth = lib.mkIf cfg.plymouth {
       enable = true;
-      theme  = "breeze";   # KDE Breeze theme
+      theme  = lib.mkDefault "breeze";   # modules/branding sets "anka"
     };
 
     # ── initrd settings ───────────────────────────────────────────────────
@@ -73,10 +79,15 @@ in
       ];
     };
 
-    # ── Silent boot (clean TTY before KDE starts) ─────────────────────────
+    # ── Silent boot: logo and progress bar only, no text ──────────────────
+    boot.consoleLogLevel = 3;
+    boot.initrd.verbose = false;
     boot.kernelParams = [
       "quiet"
+      "splash"
       "loglevel=3"
+      "rd.systemd.show_status=false"
+      "vt.global_cursor_default=0"
       "systemd.show_status=false"
       "rd.udev.log_level=3"
       "udev.log_priority=3"

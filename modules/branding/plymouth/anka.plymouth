@@ -1,0 +1,64 @@
+[Plymouth Theme]
+Name=ANKA
+Description=The ANKA logo and a thin progress bar on black
+ModuleName=two-step
+
+[two-step]
+Font=Inter 12
+TitleFont=Inter Light 24
+ImageDir=@out@/share/plymouth/themes/anka
+WatermarkHorizontalAlignment=.5
+WatermarkVerticalAlignment=.45
+HorizontalAlignment=.5
+VerticalAlignment=.62
+DialogHorizontalAlignment=.5
+DialogVerticalAlignment=.62
+TitleHorizontalAlignment=.5
+TitleVerticalAlignment=.25
+ProgressBarHorizontalAlignment=.5
+ProgressBarVerticalAlignment=.62
+ProgressBarWidth=160
+ProgressBarHeight=4
+ProgressBarBackgroundColor=0x333333
+ProgressBarForegroundColor=0xf5f5f7
+BackgroundStartColor=0x000000
+BackgroundEndColor=0x000000
+MessageBelowAnimation=true
+Transition=none
+TransitionDuration=0.0
+
+[boot-up]
+UseProgressBar=true
+UseAnimation=false
+UseEndAnimation=false
+
+[shutdown]
+UseProgressBar=false
+UseAnimation=false
+UseEndAnimation=false
+
+[reboot]
+UseProgressBar=false
+UseAnimation=false
+UseEndAnimation=false
+
+[updates]
+SuppressMessages=true
+UseProgressBar=true
+UseAnimation=false
+ProgressBarShowPercentComplete=true
+Title=Updating…
+
+[system-upgrade]
+SuppressMessages=true
+UseProgressBar=true
+UseAnimation=false
+ProgressBarShowPercentComplete=true
+Title=Updating…
+
+[firmware-upgrade]
+SuppressMessages=true
+UseProgressBar=true
+UseAnimation=false
+ProgressBarShowPercentComplete=true
+Title=Updating firmware…

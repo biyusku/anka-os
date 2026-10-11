@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- One-colour ANKA logo for the top bar; Plasma paints it in the text colour. -->
+  <style id="current-color-scheme">.ColorScheme-Text { color: #f5f5f7; }</style>
+  <path class="ColorScheme-Text" fill="currentColor" d="M128 28c-14 34-34 52-34 86 0 22 15 38 34 38s34-16 34-38c0-34-20-52-34-86z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M120 170c-38-4-70-32-84-78 26 22 52 32 80 30-8 14-6 32 4 48z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M136 170c38-4 70-32 84-78-26 22-52 32-80 30 8 14 6 32-4 48z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M128 162l-22 66h44z"/>
+</svg>

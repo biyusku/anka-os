@@ -1,0 +1,46 @@
+# ANKA boot menu: the logo and a short list on black.
+# Fonts are made from Inter at build time (../default.nix).
+title-text: ""
+desktop-color: "#000000"
+terminal-font: "ANKA Regular 16"
+message-font: "ANKA Regular 16"
+message-color: "#98989d"
+
++ image {
+    left = 50%-48
+    top = 18%
+    width = 96
+    height = 96
+    file = "logo.png"
+}
+
++ boot_menu {
+    left = 50%-260
+    width = 520
+    top = 18%+136
+    height = 60%
+    item_font = "ANKA Regular 20"
+    item_color = "#98989d"
+    selected_item_font = "ANKA Regular 20"
+    selected_item_color = "#f5f5f7"
+    selected_item_pixmap_style = "select_*.png"
+    item_height = 38
+    item_padding = 12
+    item_spacing = 4
+    icon_width = 0
+    icon_height = 0
+    item_icon_space = 0
+    scrollbar = false
+}
+
++ label {
+    id = "__timeout__"
+    left = 0
+    width = 100%
+    top = 100%-56
+    height = 20
+    align = "center"
+    color = "#555555"
+    font = "ANKA Regular 16"
+    text = "%d"
+}
