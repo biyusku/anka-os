@@ -36,6 +36,10 @@ Son güncelleme: 2026-10-11
   fail2ban açıldığında sistem derlenmiyordu → düzeltildi. Test: extendModules ile
   `anka.<seçenek> = …` ekleyip toplevel.drvPath değerlendir.
 
+- `checks.option-matrix`: 18 seçenek kombinasyonu (`nix flake check` ile) değerlendirilir;
+  yeni isteğe bağlı özellik eklerken buraya bir varyant ekle.
+- README yeniden yazıldı. Repoda LICENSE dosyası yok (karar kullanıcıda).
+
 ## Sıradaki işler
 
 - AI: daemon çalışıyor ama intent/router/memory/voice/confirmation_gate hâlâ bağlı değil;

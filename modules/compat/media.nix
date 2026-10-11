@@ -137,14 +137,16 @@ in
     boot.kernelModules = lib.mkIf (cfg.dvd || cfg.bluray) [ "sg" ];
 
     # ── mpv config drop-in (hardware decode) ─────────────────────────────────
-    environment.etc."mpv/mpv.conf".text = lib.mkIf (cfg.extraPlayers && cfg.hardwareDecode) ''
-      # ANKA: hardware video decode
-      hwdec=auto-safe
-      hwdec-codecs=all
-      vo=gpu-next
-      gpu-api=vulkan
-      profile=fast
-    '';
+    environment.etc."mpv/mpv.conf" = lib.mkIf (cfg.extraPlayers && cfg.hardwareDecode) {
+      text = ''
+        # ANKA: hardware video decode
+        hwdec=auto-safe
+        hwdec-codecs=all
+        vo=gpu-next
+        gpu-api=vulkan
+        profile=fast
+      '';
+    };
 
   };
 }

@@ -85,9 +85,11 @@ in
     # ── Font DPI / scale ──────────────────────────────────────────────────────
     # Fonts in NixOS are set via fontconfig; for DPI we write an Xresources file
     # and a KDE plasma-setup script.
-    environment.etc."X11/Xresources.d/anka-dpi".text = lib.mkIf cfg.largeFonts ''
-      Xft.dpi: ${toString cfg.dpi}
-    '';
+    environment.etc."X11/Xresources.d/anka-dpi" = lib.mkIf cfg.largeFonts {
+      text = ''
+        Xft.dpi: ${toString cfg.dpi}
+      '';
+    };
 
     fonts.fontconfig = lib.mkIf cfg.largeFonts {
       # subpixel rendering for LCD screens
@@ -100,21 +102,27 @@ in
     # System-wide defaults in /etc/xdg apply to every user (their own
     # settings still win). Writing into home directories as root would
     # leave root-owned files the user can no longer change.
-    environment.etc."xdg/kcmfonts".text = lib.mkIf cfg.largeFonts ''
-      [General]
-      forceFontDPI=${toString cfg.dpi}
-    '';
-    environment.etc."xdg/kdeglobals".text = lib.mkIf cfg.highContrast ''
-      [KDE]
-      contrast=10
-    '';
+    environment.etc."xdg/kcmfonts" = lib.mkIf cfg.largeFonts {
+      text = ''
+        [General]
+        forceFontDPI=${toString cfg.dpi}
+      '';
+    };
+    environment.etc."xdg/kdeglobals" = lib.mkIf cfg.highContrast {
+      text = ''
+        [KDE]
+        contrast=10
+      '';
+    };
 
     # ── GTK high-contrast theme ───────────────────────────────────────────────
-    environment.etc."gtk-3.0/settings.ini".text = lib.mkIf cfg.highContrast ''
-      [Settings]
-      gtk-theme-name=HighContrast
-      gtk-icon-theme-name=HighContrast
-    '';
+    environment.etc."gtk-3.0/settings.ini" = lib.mkIf cfg.highContrast {
+      text = ''
+        [Settings]
+        gtk-theme-name=HighContrast
+        gtk-icon-theme-name=HighContrast
+      '';
+    };
 
     # ── Kernel: accessibility drivers (braille, tactile devices) ─────────────
     boot.kernelModules = lib.mkIf cfg.brailleDisplay [ "usbhid" ];

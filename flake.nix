@@ -109,6 +109,43 @@
     # ── Built by `nix flake check` (CI) ───────────────────────────────────
     # Packages ANKA builds itself: evaluating the system doesn't compile them.
     checks.${system} = {
+      # Every variant must evaluate. Optional features are off by default,
+      # so without this a broken one goes unnoticed until someone turns it
+      # on. Only evaluated (the drv paths' context is dropped), not built.
+      option-matrix =
+        let
+          inherit (nixpkgs) lib;
+          variants = {
+            light         = { anka.profile = "light"; };
+            nvidia        = { anka.gpu.type = "nvidia"; anka.gpu.nvidia.open = true; };
+            intel         = { anka.gpu.type = "intel"; };
+            hybrid        = { anka.gpu.type = "intel+nvidia"; anka.gpu.nvidia.prime.enable = true; };
+            no-gpu        = { anka.gpu.type = "none"; };
+            game-mode     = { anka.gaming.gameMode.default = true;
+                              anka.desktop.autoLogin = { enable = true; user = "anka"; }; };
+            accessibility = { anka.accessibility = { enable = true; orca = true; largeFonts = true;
+                                                     highContrast = true; brailleDisplay = true; }; };
+            a11y-minimal  = { anka.accessibility.enable = true; };
+            no-branding   = { anka.branding.enable = false; anka.accessibility = { enable = true; highContrast = true; }; };
+            ssh           = { anka.security.firewall.allowSsh = true; anka.security.fail2ban.enable = true; };
+            usbguard      = { anka.security.usbGuard.enable = true; };
+            adobe         = { anka.adobe.enable = true; };
+            wine-office   = { anka.compat.windows.wineOffice = true; };
+            gnome         = { anka.desktop.session = "gnome"; };
+            xanmod        = { anka.kernel.variant = "linux_xanmod"; };
+            stock-kernel  = { anka.kernel.variant = "default"; };
+            ai-cpu        = { anka.ai.acceleration = "cpu"; };
+            update-auto   = { anka.update.autoApply = true; anka.update.channel = "unstable"; };
+          };
+          evaluate = name: module:
+            builtins.unsafeDiscardStringContext
+              (self.nixosConfigurations.anka.extendModules {
+                modules = [ (lib.mapAttrsRecursive (_: lib.mkOverride 50) module) ];
+              }).config.system.build.toplevel.drvPath;
+        in
+        self.nixosConfigurations.anka.pkgs.writeText "anka-option-matrix"
+          (lib.concatStringsSep "\n" (lib.mapAttrsToList (n: m: "${n} ${evaluate n m}") variants));
+
       anka-update     = self.nixosConfigurations.anka.config.system.build.ankaUpdate;
       kcm-anka-update = self.nixosConfigurations.anka.config.system.build.kcmAnkaUpdate;
       anka-ai         = self.nixosConfigurations.anka.config.system.build.ankaAi;
