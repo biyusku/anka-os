@@ -9,6 +9,7 @@
 #include <KQuickConfigModule>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QProcess>
 #include <QString>
 #include <QStringList>
@@ -59,7 +60,9 @@ public Q_SLOTS:
             const QJsonObject json = QJsonDocument::fromJson(proc->readAllStandardOutput()).object();
             if (status != QProcess::NormalExit || exitCode != 0 || json.isEmpty()) {
                 const QString err = QString::fromUtf8(proc->readAllStandardError()).trimmed();
-                m_statusError = err.isEmpty() ? i18n("Güncelleme bilgisi alınamadı.") : err;
+                m_statusError = !err.isEmpty() ? err
+                    : QLocale().language() == QLocale::Turkish ? QStringLiteral("Güncellemeler denetlenemedi.")
+                                                               : QStringLiteral("Couldn't check for updates.");
                 Q_EMIT statusChanged();
                 return;
             }

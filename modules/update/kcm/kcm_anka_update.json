@@ -6,14 +6,15 @@
                 "Name": "ANKA OS Team"
             }
         ],
-        "Description": "ANKA OS güncelleme yöneticisi",
-        "Icon": "system-software-update",
+        "Description": "Update ANKA OS or go back to the previous version",
+        "Icon": "anka",
         "Id": "kcm_anka_update",
         "License": "GPL-2.0-or-later",
         "Name": "ANKA Updates",
         "Version": "0.1.0",
         "Website": "https://github.com/biyusku/anka-os",
         "X-KDE-System-Settings-Parent-Category": "system",
-        "X-KDE-System-Settings-Category": "software"
+        "X-KDE-System-Settings-Category": "software",
+        "Description[tr]": "ANKA OS'i güncelle veya önceki sürüme dön"
     }
 }
