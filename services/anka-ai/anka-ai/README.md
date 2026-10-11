@@ -3,8 +3,13 @@
 ## What runs today
 
 ```
-anka-ai "soru"  ──D-Bus──▶  anka-ai-daemon (org.anka.AI, session bus)  ──HTTP──▶  Ollama (local model)
+KRunner "ai soru" ─┐
+anka-ai "soru"  ───┴─D-Bus─▶  anka-ai-daemon (org.anka.AI, session bus)  ──HTTP──▶  Ollama (local model)
 ```
+
+**KRunner** (Alt+Space): type `ai <question>` or `? <question>`, press Enter;
+the answer opens in a small window. The daemon implements `org.kde.krunner1`
+on `/krunner`; the plugin file is `share/krunner/dbusplugins/anka-ai.desktop`.
 
 | Piece | File | Notes |
 |---|---|---|

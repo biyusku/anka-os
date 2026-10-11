@@ -21,6 +21,8 @@ let
     for size in 48 128 256; do
       rsvg-convert -w $size -h $size ${./artwork/logo.svg} -o $out/share/anka/logo-$size.png
     done
+    # Icon name "anka" (KRunner, launchers)
+    install -Dm644 ${./artwork/logo.svg} $out/share/icons/hicolor/scalable/apps/anka.svg
 
     # ── Wallpaper (Plasma wallpaper package "ANKA") ─────────────────────
     wp=$out/share/wallpapers/ANKA

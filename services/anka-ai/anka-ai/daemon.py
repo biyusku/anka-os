@@ -9,12 +9,15 @@ Ollama model.
   first time someone asks, and Ask() reports progress until it is ready.
 - Respects the first-run wizard: AI_MODE=none in ~/.config/anka/setup.conf
   turns the assistant off.
+- KRunner (Alt+Space): "ai <question>" or "? <question>" asks ANKA AI; the
+  answer opens in a small window (org.kde.krunner1 on /krunner).
 """
 
 import json
 import logging
 import os
 import signal
+import subprocess
 import threading
 from pathlib import Path
 
@@ -30,6 +33,10 @@ DBUS_INTERFACE = "org.anka.AI"
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_MODEL = os.environ.get("ANKA_AI_MODEL", "qwen2.5:7b")
+KDIALOG = os.environ.get("ANKA_KDIALOG", "kdialog")
+KRUNNER_PATH = "/krunner"
+KRUNNER_INTERFACE = "org.kde.krunner1"
+KRUNNER_TRIGGERS = ("ai ", "? ")
 SETUP_CONF = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "anka" / "setup.conf"
 MAX_HISTORY = 20
 
@@ -199,12 +206,65 @@ class AnkaAIService(dbus.service.Object):
         """Emitted when the service status changes."""
 
 
+def krunner_question(query):
+    """The question in a KRunner query ("ai …" / "? …"), or None."""
+    lowered = query.lower()
+    for trigger in KRUNNER_TRIGGERS:
+        if lowered.startswith(trigger) and query[len(trigger):].strip():
+            return query[len(trigger):].strip()
+    return None
+
+
+class AnkaKRunner(dbus.service.Object):
+    """KRunner D-Bus runner (see share/krunner/dbusplugins/anka-ai.desktop)."""
+
+    def __init__(self, bus, object_path, ai):
+        super().__init__(bus, object_path)
+        self.ai = ai
+
+    @dbus.service.method(KRUNNER_INTERFACE, in_signature="", out_signature="a(sss)")
+    def Actions(self):
+        return dbus.Array([], signature="(sss)")
+
+    @dbus.service.method(KRUNNER_INTERFACE, in_signature="s", out_signature="a(sssida{sv})")
+    def Match(self, query):
+        question = krunner_question(query)
+        if question is None:
+            return dbus.Array([], signature="(sssida{sv})")
+        match = dbus.Struct(
+            (
+                question,                      # match id: the question itself
+                f"ANKA AI: {question}",
+                "anka",                        # icon (falls back to a generic one)
+                dbus.Int32(100),               # ExactMatch
+                dbus.Double(1.0),
+                dbus.Dictionary({"subtext": "Enter → ask ANKA AI"}, signature="sv"),
+            ),
+            signature="sssida{sv}",
+        )
+        return dbus.Array([match], signature="(sssida{sv})")
+
+    @dbus.service.method(KRUNNER_INTERFACE, in_signature="ss", out_signature="")
+    def Run(self, match_id, action_id):
+        # Answering can take a while: don't block KRunner or the bus.
+        threading.Thread(target=self._answer, args=(match_id,), daemon=True).start()
+
+    def _answer(self, question):
+        result = json.loads(self.ai.Ask(question))
+        text = result.get("response") or result.get("error") or "No answer."
+        try:
+            subprocess.run([KDIALOG, "--title", "ANKA AI", "--msgbox", f"{question}\n\n{text}"], check=False)
+        except OSError as e:
+            logger.error("Can't show the answer with %s: %s", KDIALOG, e)
+
+
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     session_bus = dbus.SessionBus()
     # Keep references: the bus name and object live as long as the loop.
     bus_name = dbus.service.BusName(DBUS_SERVICE_NAME, session_bus)
     service = AnkaAIService(session_bus, DBUS_OBJECT_PATH)
+    runner = AnkaKRunner(session_bus, KRUNNER_PATH, service)
 
     loop = GLib.MainLoop()
 
@@ -217,7 +277,7 @@ def main():
     try:
         loop.run()
     finally:
-        del service, bus_name
+        del runner, service, bus_name
         logger.info("ANKA AI daemon stopped")
 
 

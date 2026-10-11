@@ -40,6 +40,29 @@ let
 
     pythonImportsCheck = [ "daemon" "dbus_bridge" ];
 
+    # KRunner (Alt+Space): "ai <question>" / "? <question>" — the daemon
+    # implements org.kde.krunner1 on /krunner.
+    postInstall = ''
+      mkdir -p $out/share/krunner/dbusplugins
+      cat > $out/share/krunner/dbusplugins/anka-ai.desktop <<'EOF'
+      [Desktop Entry]
+      Name=ANKA AI
+      Comment=Ask the ANKA AI assistant: "ai <question>"
+      Icon=anka
+      Type=Service
+      X-KDE-ServiceTypes=Plasma/Runner
+      X-KDE-PluginInfo-Name=anka-ai
+      X-KDE-PluginInfo-Author=ANKA OS
+      X-KDE-PluginInfo-Version=1.0
+      X-KDE-PluginInfo-License=MIT
+      X-KDE-PluginInfo-EnabledByDefault=true
+      X-Plasma-API=DBus
+      X-Plasma-DBusRunner-Service=org.anka.AI
+      X-Plasma-DBusRunner-Path=/krunner
+      X-Plasma-Request-Actions-Once=true
+      EOF
+    '';
+
     meta = {
       description = "ANKA OS AI assistant daemon";
       license     = lib.licenses.mit;
@@ -114,6 +137,7 @@ in
       wantedBy = [ "graphical-session.target" ];
 
       environment = {
+        ANKA_KDIALOG  = "${pkgs.kdePackages.kdialog}/bin/kdialog";   # KRunner answers
         ANKA_AI_MODEL = cfg.localModel;
         OLLAMA_HOST   = "http://localhost:${toString cfg.port}";
       };

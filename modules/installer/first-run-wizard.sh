@@ -38,7 +38,7 @@ if [[ ${LANG:-} == tr* ]]; then
   has steam && DONE+="\n• Oyunlar: Steam (Windows oyunları Proton ile çalışır)\n• Oyun Modu: giriş ekranında \"Steam\" oturumunu seç"
   has bottles && DONE+="\n• Windows programları: Bottles"
   DONE+="\n• Güncellemeler: Sistem Ayarları › ANKA Updates"
-  has anka-ai && DONE+="\n• AI asistan: terminalde  anka-ai \"sorun\""
+  has anka-ai && DONE+="\n• AI asistan: Alt+Boşluk, sonra  ai sorun"
 else
   TITLE="ANKA OS"
   WELCOME="Welcome to ANKA OS!\n\nYour computer is ready. This takes a few seconds."
@@ -49,7 +49,7 @@ else
   has steam && DONE+="\n• Games: Steam (Windows games run through Proton)\n• Game Mode: pick the \"Steam\" session on the login screen"
   has bottles && DONE+="\n• Windows programs: Bottles"
   DONE+="\n• Updates: System Settings › ANKA Updates"
-  has anka-ai && DONE+="\n• AI assistant: in a terminal,  anka-ai \"your question\""
+  has anka-ai && DONE+="\n• AI assistant: Alt+Space, then  ai your question"
 fi
 
 kdialog --title "$TITLE" --msgbox "$WELCOME" || true

@@ -18,7 +18,7 @@ reproducible and rollback-safe underneath.
 | **Windows apps** | Wine, Bottles, umu-launcher, NTFS drives. |
 | **Light & fast** | Prebuilt Zen kernel + Valve's `scx_lavd` scheduler, zram, earlyoom. *ANKA Hafif* leaves out the large extras for older computers. |
 | **Simple** | One welcome screen, updates from System Settings › ANKA Updates, the ANKA look from boot splash to desktop. |
-| **AI assistant** | On-device (Ollama, no data leaves the computer), `anka-ai "question"`; MCP servers for AI tools. |
+| **AI assistant** | On-device (Ollama, no data leaves the computer): Alt+Space, then `ai your question`; MCP servers for AI tools. |
 | **Safe updates** | Every update is a new system generation; roll back from System Settings or the boot menu. |
 
 ## Get ANKA

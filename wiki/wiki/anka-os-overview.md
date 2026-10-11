@@ -70,6 +70,7 @@ anka-ai "soru"  ──D-Bus──▶  daemon.py (org.anka.AI, kullanıcı oturum
 ```
 
 - **D-Bus servisi:** `org.anka.AI` — `Ask()`, `GetStatus()`, `ClearHistory()`, `SetModel()`
+- **KRunner:** Alt+Boşluk → `ai soru` (veya `? soru`) → Enter; cevap küçük bir pencerede açılır
 - **Terminal:** `anka-ai` (durum) / `anka-ai "soru"`
 - **Model:** `qwen2.5:7b`, ilk soruda arka planda indirilir (açılışta indirilmez)
 - **Hızlandırma:** ekran kartı varsa Ollama Vulkan ile çalışır (`anka.ai.acceleration`)
