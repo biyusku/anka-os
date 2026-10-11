@@ -27,8 +27,13 @@ Son güncelleme: 2026-10-11
   sandbox proxy'sinin engellediği indirmeler (Steam, Discord, firmware) başarısız.
 
 - Oyun Modu: giriş ekranında "Steam" oturumu (gamescope); `gameMode.default` ile konsol gibi açılış.
-- Görünüm (`modules/branding`): ANKA duvar kâğıdı (artwork/gen_wallpaper.py), logo,
-  "ANKA OS" adı + Plymouth logosu, Breeze Dark + kırmızı vurgu, SDDM/kilit ekranı arka planı.
+- Görünüm (`modules/branding`, ayrıntı `docs/branding.md`): Mac sadeliğinde baştan sona —
+  gizli açılış menüsü (Windows varsa 5 sn), Plymouth `anka` (logo + ince çubuk), aynı
+  ksplash, Inter, ANKA renk şeması (grafit + kırmızı, `colors.nix`), üst çubuk + yüzen dock
+  (LnF layout JS), sağda pencere düğmeleri, canlı USB için GRUB/syslinux teması.
+- `pkgs/anka-ui`: karşılama (kdialog yerine tek pencere, çıkış kodu 10/11 = AI aç/kapa) ve
+  KRunner AI yanıt penceresi (stdin'den yanıt). ANKA Updates KCM sadeleştirildi.
+- Ekran görüntüsü testi: QML'ler offscreen Qt ile render edilip incelendi (kalıcı test yok).
 
 - Performans: earlyoom hiç çalışmıyordu (argüman hatası) → düzeltildi; zram swappiness 180;
   governor "auto"; olmayan sysctl'ler ve her zaman açık 64-quantum PipeWire kaldırıldı.
@@ -42,7 +47,7 @@ Son güncelleme: 2026-10-11
 
 ## Sıradaki işler
 
-- AI: daemon çalışıyor ama intent/router/memory/voice/confirmation_gate hâlâ bağlı değil;
-  bir arayüz (plasmoid / KRunner) yok, sadece `anka-ai` terminal komutu var.
+- AI: daemon + KRunner + yanıt penceresi çalışıyor; intent/router/memory/voice/confirmation_gate
+  hâlâ bağlı değil.
 - SteamOS özellikleri: Jovian-NixOS (Oyun Modu). (scx_lavd ve NTSYNC tamam.)
 - ISO'yu gerçek donanımda / QEMU'da uçtan uca test et.

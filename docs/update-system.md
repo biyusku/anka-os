@@ -37,7 +37,8 @@ sudo anka-update rollback     back to the ANKA used before the last update
 5. on failure restores both files (the running system is unchanged).
 
 `rollback` restores the backed-up files and rebuilds. The boot menu still lists
-every earlier generation as a last resort.
+every earlier generation as a last resort (it is hidden: hold Space — Shift or
+Esc with GRUB — while the computer starts).
 
 ## Pieces
 

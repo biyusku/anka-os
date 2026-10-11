@@ -1,7 +1,7 @@
 # ANKA OS — Kurulum Programı
 
 Live ISO açıldığında ANKA kurulum programı (Calamares) kendiliğinden başlar.
-Masaüstündeki **Install ANKA OS** kısayolu da aynı programı açar.
+Masaüstündeki **ANKA'yı Kur** (Install ANKA) kısayolu da aynı programı açar.
 
 ## Kullanıcının gördüğü adımlar
 
@@ -44,8 +44,11 @@ Masaüstündeki **Install ANKA OS** kısayolu da aynı programı açar.
    /etc/nixos/configuration.nix          kurulumda yapılan seçimler
    ```
 
-4. `nixos-install --flake /etc/nixos#anka` çalıştırır.
-5. Calamares'in `users` adımı kullanıcının parolasını ayarlar. Kullanıcının
+4. Bilgisayarda Windows varsa (NTFS/BitLocker bölümü veya EFI bölümünde
+   `EFI/Microsoft`) `anka.boot.timeout = 5;` yazar: açılış menüsü 5 saniye
+   görünür. Yoksa menü gizlidir (açılırken Boşluk basılı tutulunca görünür).
+5. `nixos-install --flake /etc/nixos#anka` çalıştırır.
+6. Calamares'in `users` adımı kullanıcının parolasını ayarlar. Kullanıcının
    kendisi `configuration.nix` içinde tanımlıdır.
 
 ANKA'nın varsayılanları (`profiles/default.nix`) `lib.mkDefault` ile

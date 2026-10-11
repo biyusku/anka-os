@@ -13,13 +13,13 @@ reproducible and rollback-safe underneath.
 
 | | |
 |---|---|
-| **Installer** | Graphical (Calamares): language, keyboard, user, *ANKA* or *ANKA Hafif*, disk (Btrfs with snapshots, optional encryption). Graphics drivers are detected automatically. |
+| **Installer** | Graphical (Calamares): language, keyboard, user, *ANKA* or *ANKA Light*, disk (Btrfs with snapshots, optional encryption). Graphics drivers are detected automatically. |
 | **Games** | Steam with GE-Proton, Game Mode (a console-style Steam session on the login screen), GameMode, MangoHud, Lutris, Heroic. |
 | **Windows apps** | Wine, Bottles, umu-launcher, NTFS drives. |
-| **Light & fast** | Prebuilt Zen kernel + Valve's `scx_lavd` scheduler, zram, earlyoom. *ANKA Hafif* leaves out the large extras for older computers. |
-| **Simple** | One welcome screen, updates from System Settings › ANKA Updates, the ANKA look from boot splash to desktop. |
+| **Light & fast** | Prebuilt Zen kernel + Valve's `scx_lavd` scheduler, zram, earlyoom. *ANKA Light* leaves out the large extras for older computers. |
+| **Simple** | Quiet by design: logo and progress bar at start-up, a slim top bar and a dock, Inter, one window to welcome you, one button to update. |
 | **AI assistant** | On-device (Ollama, no data leaves the computer): Alt+Space, then `ai your question`; MCP servers for AI tools. |
-| **Safe updates** | Every update is a new system generation; roll back from System Settings or the boot menu. |
+| **Safe updates** | Every update is a new system generation; go back from System Settings, or hold Space at power-on for the boot menu. |
 
 ## Get ANKA
 
@@ -57,7 +57,8 @@ modules/             system, desktop, gpu, gaming, compat, performance,
                      ai, branding, update, installer (first-login welcome)
 iso/                 live ISO + the ANKA installer (iso/calamares)
 services/anka-ai/    AI daemon, CLI and MCP servers
-docs/                installer.md, update-system.md, branding.md
+pkgs/anka-ui/        welcome and AI answer windows (Qt Quick / Kirigami)
+docs/                installer.md, update-system.md, branding.md (look)
 ```
 
 `nix flake check` evaluates every configuration, evaluates a matrix of

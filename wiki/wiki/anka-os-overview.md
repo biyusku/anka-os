@@ -41,7 +41,7 @@ flake.nix
 
 | Modül | Amaç |
 |---|---|
-| `system/boot.nix` | systemd-boot, Plymouth, timeout |
+| `system/boot.nix` | systemd-boot/GRUB, gizli menü (timeout 0), sessiz açılış |
 | `system/kernel.nix` | Zen kernel (varsayılan, hazır derlenmiş) / CachyOS (isteğe bağlı) |
 | `system/filesystem.nix` | Btrfs + subvolumes + tmpfs |
 | `system/network.nix` | NetworkManager, mDNS, Bluetooth |
@@ -54,7 +54,7 @@ flake.nix
 | `performance/` | zram, governor, THP, earlyoom, AMD tweaks |
 | `compat/windows.nix` | GE-Proton, umu-launcher, Bottles, NTFS |
 | `compat/media.nix` | DVD, VAAPI, HW decode, media codecs |
-| `branding/` | ANKA görünümü: duvar kâğıdı, logo, "ANKA OS" adı, açılış ekranı, vurgu rengi |
+| `branding/` | ANKA görünümü: renk şeması, Inter, üst çubuk + dock, Plymouth/ksplash/GRUB temaları, logo, duvar kâğıdı |
 | `accessibility/` | Orca, büyük fontlar (opt-in) |
 | `update/` | Güncelleme sistemi + KDE KCM |
 | `installer/` | First-run wizard |
@@ -89,7 +89,7 @@ onayı), `voice_pipeline.py` (ses). Ayrıntılar: `services/anka-ai/anka-ai/READ
 
 ## Varsayılan Host Konfigürasyonu Özeti
 
-- Boot: systemd-boot + Plymouth, 3s timeout
+- Boot: systemd-boot + Plymouth (`anka`), menü gizli (Boşluk ile açılır)
 - Kernel: Zen (hazır derlenmiş) + scx_lavd zamanlayıcı (Valve)
 - FS: Btrfs + subvolumes + tmpfs
 - Desktop: KDE Plasma 6 + Wayland
