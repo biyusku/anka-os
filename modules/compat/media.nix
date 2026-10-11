@@ -118,8 +118,9 @@ in
           LIBVA_DRIVER_NAME = "radeonsi";
         })
         (lib.mkIf (gpu.type == "nvidia") {
-          LIBVA_DRIVER_NAME              = "nvidia";
-          __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa.drivers}/share/glvnd/egl_vendor.d/50_mesa.json";
+          # Don't pin __EGL_VENDOR_LIBRARY_FILENAMES to Mesa here: that hides
+          # NVIDIA's EGL from every app, KWin included.
+          LIBVA_DRIVER_NAME = "nvidia";
         })
       ]))
       (lib.mkIf (cfg.vdpau && cfg.hardwareDecode) (lib.mkMerge [

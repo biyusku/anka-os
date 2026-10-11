@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>ANKA</title>
+  <defs>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#c0392b"/>
+      <stop offset="1" stop-color="#f39c12"/>
+    </linearGradient>
+  </defs>
+  <!-- Abstract phoenix: two rising wings around a flame-shaped body -->
+  <path fill="url(#flame)" d="M128 28c-14 34-34 52-34 86 0 22 15 38 34 38s34-16 34-38c0-34-20-52-34-86z"/>
+  <path fill="url(#flame)" opacity="0.85" d="M120 170c-38-4-70-32-84-78 26 22 52 32 80 30-8 14-6 32 4 48z"/>
+  <path fill="url(#flame)" opacity="0.85" d="M136 170c38-4 70-32 84-78-26 22-52 32-80 30 8 14 6 32-4 48z"/>
+  <path fill="#c0392b" d="M128 162l-22 66h44z"/>
+</svg>

@@ -36,6 +36,15 @@ in
       description = "Max size of /tmp tmpfs (e.g. '4G', '50%').";
     };
 
+    manageMounts = lib.mkOption {
+      type    = lib.types.bool;
+      default = false;
+      description = ''
+        Declare the root/home/nix/snapshots Btrfs mounts from rootDevice.
+        Leave off on installed machines: their hardware-configuration.nix
+        already declares the real mounts (by UUID), and both would conflict.
+      '';
+    };
     swapOnZram = lib.mkOption {
       type    = lib.types.bool;
       default = true;
@@ -52,7 +61,7 @@ in
     };
 
     # ── Btrfs mount options (performance + CoW tuning) ────────────────────
-    fileSystems = lib.mkIf (cfg.rootFormat == "btrfs" && cfg.btrfsSubvolumes) {
+    fileSystems = lib.mkIf (cfg.manageMounts && cfg.rootFormat == "btrfs" && cfg.btrfsSubvolumes) {
       "/" = {
         device  = cfg.rootDevice;
         fsType  = "btrfs";

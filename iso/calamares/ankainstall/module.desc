@@ -1,0 +1,6 @@
+# ANKA OS — installs the ANKA flake (replaces the upstream `nixos` job)
+---
+type:       "job"
+name:       "ankainstall"
+interface:  "python"
+script:     "main.py"

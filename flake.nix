@@ -40,30 +40,38 @@
   let
     system = "x86_64-linux";
 
-    pkgs = import nixpkgs {
-      inherit system;
-      config.allowUnfree = true;
-      overlays = [
-        chaotic.overlays.default
-      ];
-    };
+    # Build an ANKA system from ANKA's modules + profile and the machine's
+    # own modules (hardware-configuration.nix, configuration.nix, ...).
+    mkSystem = { modules ? [ ], specialArgs ? { } }:
+      nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; } // specialArgs;
+        modules = [ self.nixosModules.default ] ++ modules;
+      };
   in
   {
-    # ── Default host (generic PC install target) ──────────────────────────
-    nixosConfigurations.anka = nixpkgs.lib.nixosSystem {
-      inherit system pkgs;
-      specialArgs = { inherit inputs; };
-      modules = [
-        chaotic.nixosModules.default
+    # ── ANKA as a NixOS module ────────────────────────────────────────────
+    # Everything that makes a NixOS machine an ANKA machine. Installed
+    # systems use it through `lib.mkSystem` from their /etc/nixos flake.
+    nixosModules.default = { lib, ... }: {
+      imports = [
+        chaotic.nixosModules.default   # CachyOS kernel (adds its own overlay)
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
-        ./hosts/default/configuration.nix
-        # ── First-run wizard ─────────────────────────────────────────────────
-        ./modules/installer/default.nix
-        # ── Update system ────────────────────────────────────────────────────
-        ./modules/update/default.nix
-        ./modules/update/version.nix
+        ./modules
+        ./profiles/default.nix
       ];
+      nixpkgs.hostPlatform       = lib.mkDefault system;
+      nixpkgs.config.allowUnfree = lib.mkDefault true;
+      # Keep the ANKA source this system was built from out of the garbage
+      # collector, so `nixos-rebuild` keeps working without fetching it.
+      system.extraDependencies = [ self.outPath ];
+    };
+
+    lib.mkSystem = mkSystem;
+
+    # ── Reference host (evaluated by CI) ──────────────────────────────────
+    nixosConfigurations.anka = mkSystem {
+      modules = [ ./hosts/default/configuration.nix ];
     };
 
     # ── Installer ISOs ────────────────────────────────────────────────────

@@ -1,60 +1,42 @@
-# ANKA OS — Calamares branding descriptor
-# https://github.com/calamares/calamares/blob/calamares/src/branding/default/branding.desc
-
+# ANKA OS — Calamares branding
+# Keys: https://github.com/calamares/calamares/blob/calamares/src/branding/default/branding.desc
 ---
 componentName: anka
 
-# ── Product identity ──────────────────────────────────────────────────────────
+welcomeStyleCalamares: false
+welcomeExpandingLogo:  true
+
+windowExpanding:  normal
+windowSize:       860px,560px
+windowPlacement:  center
+
+sidebar:    widget
+navigation: widget
+
 strings:
   productName:         "ANKA OS"
   shortProductName:    "ANKA"
-  version:             "1.0"
-  shortVersion:        "1.0"
-  versionedName:       "ANKA OS 1.0"
-  shortVersionedName:  "ANKA 1.0"
+  version:             ""
+  shortVersion:        ""
+  versionedName:       "ANKA OS"
+  shortVersionedName:  "ANKA"
   bootloaderEntryName: "ANKA OS"
-  productUrl:          "https://github.com/anka-os/anka"
-  supportUrl:          "https://github.com/anka-os/anka/issues"
-  knownIssuesUrl:      "https://github.com/anka-os/anka/issues"
-  releaseNotesUrl:     "https://github.com/anka-os/anka/releases"
+  productUrl:          "https://github.com/biyusku/anka-os"
+  supportUrl:          "https://github.com/biyusku/anka-os/issues"
+  knownIssuesUrl:      "https://github.com/biyusku/anka-os/issues"
+  releaseNotesUrl:     "https://github.com/biyusku/anka-os/releases"
 
-# ── Welcome page ──────────────────────────────────────────────────────────────
-welcomeStyleCalamares: true
-welcomeExpandingLogo:  false
-
-# ── Images & assets ────────────────────────────────────────────────────────────
-# All paths are relative to this branding.desc file
 images:
-  productLogo:     "logo.png"
-  productIcon:     "logo.png"
-  productWelcome:  "welcome.png"
+  productLogo:    "logo.svg"
+  productIcon:    "logo.svg"
+  productWelcome: "logo.svg"
 
-# ── Color scheme (ANKA dark theme — deep red + gold) ──────────────────────────
+# Deep red + gold (docs/branding.md)
 style:
-  sidebarBackground:       "#1a0a0a"
-  sidebarText:             "#e8d5b0"
-  sidebarTextHighlight:    "#c0392b"
-  sidebarSelect:           "#2d1010"
+  SidebarBackground:        "#1a0a0a"
+  SidebarText:              "#f2e6cf"
+  SidebarTextCurrent:       "#ffffff"
+  SidebarBackgroundCurrent: "#c0392b"
 
-  windowBackground:        "#0f0a0a"
-  windowText:              "#e8d5b0"
-
-  highlight:               "#c0392b"
-  highlightText:           "#ffffff"
-
-  buttonBackground:        "#c0392b"
-  buttonText:              "#ffffff"
-  buttonHoverBackground:   "#96281b"
-
-  progressColor:           "#f39c12"
-  progressBackground:      "#2d1010"
-
-  alertBackground:         "#2d1010"
-  alertText:               "#e8d5b0"
-
-  defaultFontFamily:       ""
-  defaultFontSize:         ""
-
-# ── Slideshow shown during installation ────────────────────────────────────────
-slideshow:     "show.qml"
-slideshowAPI:  2
+slideshow:    "show.qml"
+slideshowAPI: 2

@@ -5,8 +5,12 @@
 
 {
   imports = [
-    # Graphical Calamares installer with KDE Plasma 6
-    "${modulesPath}/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix"
+    # Graphical live system (no installer: nixpkgs' Calamares installs plain
+    # NixOS, ANKA brings its own below)
+    "${modulesPath}/installer/cd-dvd/installation-cd-graphical-base.nix"
+
+    # The ANKA installer
+    ./calamares
 
     # Bring in ANKA system modules (subset safe for ISO)
     ../modules/desktop/default.nix
@@ -101,7 +105,15 @@
     defaultSession = "plasma";
   };
 
-  services.desktopManager.plasma6.enable = true;
+  services.desktopManager.plasma6 = {
+    enable = true;
+    enableQt5Integration = false;
+  };
+  # Optional wallpapers add ~126 MiB to the ISO
+  environment.plasma6.excludePackages = [ pkgs.kdePackages.plasma-workspace-wallpapers ];
+  # Avoid bundling an entire MariaDB installation on the ISO
+  programs.kde-pim.enable = false;
+  isoImage.edition = lib.mkDefault "plasma6";
 
   # Force Wayland for KDE
   environment.sessionVariables = {
@@ -138,64 +150,29 @@
     hostName              = lib.mkForce "anka-live";
   };
 
-  # ── Calamares installer configuration ─────────────────────────────────────
-  # NixOS has no services.calamares option; drop config files via environment.etc
-  environment.etc."calamares/settings.conf".source  = ./calamares/settings.conf;
-  environment.etc."calamares/modules".source        = ./calamares/modules;
-  environment.etc."calamares/branding/anka".source  = ./calamares/branding/anka;
-
   # ── ISO image settings ─────────────────────────────────────────────────────
   image.fileName = "anka-${gpu}.iso";
 
   isoImage = {
     volumeID            = "anka-OS";
     squashfsCompression = "zstd -Xcompression-level 19";
-    # Include the installer configs in the ISO
-    contents = [
-      {
-        source = ./calamares;
-        target = "/etc/calamares";
-      }
-    ];
     # Sticker for the ISO menu
     appendToMenuLabel = " ANKA OS Live";
   };
 
-  # ── Calamares launcher script (ensures correct Wayland env) ──────────────
-  environment.etc."calamares/launch.sh" = {
-    mode = "0755";
-    text = ''
-      #!/bin/sh
-      export XDG_RUNTIME_DIR=/run/user/$(id -u)
-      export WAYLAND_DISPLAY=wayland-0
-      exec calamares "$@"
-    '';
+  # ── Desktop shortcut for the installer ────────────────────────────────────
+  systemd.tmpfiles.settings."10-anka-installer-desktop" = {
+    "/home/anka/Desktop".d = {
+      user  = "anka";
+      group = "users";
+      mode  = "0755";
+    };
+    "/home/anka/Desktop/install-anka.desktop"."L+".argument =
+      "/run/current-system/sw/share/applications/calamares.desktop";
   };
-
-  # ── Desktop shortcut for installer ────────────────────────────────────────
-  # Place shortcut in anka user's Desktop via activation script
-  system.activationScripts.calamaresDesktopShortcut = ''
-    mkdir -p /home/anka/Desktop
-    cat > /home/anka/Desktop/install-anka.desktop << 'EOF'
-[Desktop Entry]
-Type=Application
-Name=Install ANKA OS
-Comment=Install ANKA OS to your computer
-Exec=/etc/calamares/launch.sh
-Icon=system-software-install
-Terminal=false
-Categories=System;
-EOF
-    chmod +x /home/anka/Desktop/install-anka.desktop
-    chown -R anka:users /home/anka/Desktop
-  '';
 
   # ── Packages available in the live environment ────────────────────────────
   environment.systemPackages = with pkgs; [
-    # Installer
-    calamares-nixos
-    calamares-nixos-extensions
-
     # Essential tools
     git
     wget

@@ -1,19 +1,22 @@
 # ANKA OS — Agent Hot State
 
-Son güncelleme: 2026-07-12
-Oturum: İlk oturum — proje tarama ve wiki oluşturma
+Son güncelleme: 2026-10-11
 
 ## Nerede kaldık
 
-Proje ilk kez tarandı. Tüm temel modüller, servisler ve docs okundu.
-Herhangi bir değişiklik yapılmadı — yalnızca proje haritası çıkarıldı.
+- Tüm flake çıktıları güncel nixos-unstable ile değerlendiriliyor; `flake.lock` eklendi.
+- ANKA artık `nixosModules.default` + `lib.mkSystem` olarak dışa aktarılıyor;
+  varsayılanlar `profiles/default.nix` içinde (`lib.mkDefault`).
+- Kurulum programı yeniden yazıldı: `iso/calamares/` + `ankainstall` job'u,
+  `/etc/nixos`'u ANKA flake'i olarak kurar (bkz. `docs/installer.md`).
+- `hardware.enableAllFirmware` açıldı (AMD GPU, Wi-Fi, mikrokod).
 
-## Bir sonraki oturum için
+## Sıradaki işler
 
-- `wiki/wiki/anka-os-overview.md` dosyasını oku — tam proje özeti orada
-- Eğer AI katmanı üzerinde çalışılacaksa `services/anka-ai/` klasörünü incele
-- Güncelleme sistemi üzerinde çalışılacaksa `modules/update/` klasörüne bak
-
-## Aktif görevler
-
-Yok.
+- Güncelleme sistemi: `modules/update/` hâlâ `/etc/anka`'yı flake sanıyor;
+  `/etc/nixos` + `nix flake update anka` akışına geçmeli. VERSION karşılaştırması bozuk.
+- AI daemon: `services/anka-ai/anka-ai/daemon.py` `/var/log/anka`'ya yazmaya çalışırken çöküyor;
+  intent/router/MCP parçaları birbirine bağlı değil.
+- "Hafif" profil (7B model, Steam vb. kapalı) ve kurulumda profil seçimi.
+- SteamOS özellikleri: Jovian-NixOS (Oyun Modu), scx_lavd, NTSYNC.
+- ISO'yu gerçek donanımda / QEMU'da uçtan uca test et.

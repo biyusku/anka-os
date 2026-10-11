@@ -14,12 +14,19 @@ Slogan: _"Eski bir laptop, yeni bir hayat."_
 
 ```
 flake.nix
-├── nixosConfigurations.anka          → Varsayılan masaüstü kurulumu
+├── nixosModules.default              → ANKA: modules/ + profiles/default.nix + chaotic/home-manager/disko
+├── lib.mkSystem { modules = [...]; } → ANKA sistemi kurar (kurulan makinelerin /etc/nixos flake'i bunu kullanır)
+├── nixosConfigurations.anka          → Referans makine (hosts/default, CI değerlendirir)
 ├── nixosConfigurations.anka-iso      → AMD ISO
 ├── nixosConfigurations.anka-iso-nvidia → NVIDIA ISO
 ├── nixosConfigurations.anka-iso-intel  → Intel ISO
 └── packages.x86_64-linux.{iso, iso-amd, iso-nvidia, iso-intel}
 ```
+
+- `modules/default.nix` — tüm ANKA modüllerini içe aktarır
+- `profiles/default.nix` — ANKA'nın varsayılan ayarları (hepsi `lib.mkDefault`)
+- `flake.lock` — tüm girdiler sabitlenmiştir; güncelleme `nix flake update` ile yapılır
+- Kurulum programı: `iso/calamares/` → ayrıntılar `docs/installer.md`
 
 **Bağımlılıklar:**
 - `nixpkgs` (unstable)
@@ -145,6 +152,10 @@ KDE KCM (System Settings > ANKA Updates)
 | AMD (default) | `nix build .#iso-amd` | Genel / AMD GPU |
 | NVIDIA | `nix build .#iso-nvidia` | NVIDIA proprietary |
 | Intel | `nix build .#iso-intel` | Intel open-source |
+
+Kurulum programı ekran kartını kendisi algılar (`lspci`), ISO varyantı yalnızca
+live oturumun sürücüsünü belirler. Kurulan sistemin `/etc/nixos` klasörü ANKA'yı
+flake girdisi olarak kullanır; bkz. `docs/installer.md`.
 
 ---
 

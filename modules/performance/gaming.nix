@@ -123,9 +123,7 @@ in
     users.groups.anka-gamemode = {};
 
     # ── NVIDIA persistenced (keeps GPU init warm) ─────────────────────────────
-    hardware.nvidia.powerManagement.enable =
-      lib.mkIf (gpu.type == "nvidia" && cfg.gaming.nvidiaTweaks) (lib.mkDefault true);
-
+    # hardware.nvidia.powerManagement is owned by modules/gpu.
     systemd.services.nvidia-persistenced = lib.mkIf (gpu.type == "nvidia" && cfg.gaming.nvidiaTweaks) {
       description   = "NVIDIA Persistence Daemon";
       wantedBy      = [ "multi-user.target" ];
