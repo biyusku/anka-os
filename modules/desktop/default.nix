@@ -49,12 +49,13 @@ in
       wayland.enable = cfg.wayland;
       theme       = "breeze";
       autoNumlock = true;
-      settings = {
-        Autologin = lib.mkIf cfg.autoLogin.enable {
-          Session = "plasma.desktop";
-          User    = cfg.autoLogin.user;
-        };
-      };
+    };
+
+    # Logs into services.displayManager.defaultSession (Plasma, or Steam's
+    # Game Mode when anka.gaming.gameMode.default is set).
+    services.displayManager.autoLogin = lib.mkIf cfg.autoLogin.enable {
+      enable = true;
+      user   = cfg.autoLogin.user;
     };
 
     # ── KDE Plasma 6 ──────────────────────────────────────────────────────

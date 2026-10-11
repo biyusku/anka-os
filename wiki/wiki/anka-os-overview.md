@@ -47,7 +47,7 @@ flake.nix
 | `system/network.nix` | NetworkManager, mDNS, Bluetooth |
 | `system/security.nix` | AppArmor, firewall, kernel hardening |
 | `desktop/` | KDE Plasma 6, Wayland |
-| `gaming/` | Steam, Gamescope, Lutris, Heroic, Discord |
+| `gaming/` | Steam, Oyun Modu (giriş ekranında "Steam" oturumu: gamescope + Steam konsol arayüzü), Lutris, Heroic, Discord |
 | `gpu/` | AMD / NVIDIA / Intel driver seçimi |
 | `apps/` | Flatpak, Firefox, Konsole |
 | `ai/` | Ollama + ANKA AI daemon + MCP sunucuları |

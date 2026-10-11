@@ -24,6 +24,9 @@ set_conf() {
   echo "$1=$2" >>"$SETUP_CONF"
 }
 
+# Only mention what this installation has (the light profile has no AI or Bottles).
+has() { command -v "$1" >/dev/null; }
+
 # Texts follow the language chosen in the installer.
 if [[ ${LANG:-} == tr* ]]; then
   TITLE="ANKA OS"
@@ -31,22 +34,32 @@ if [[ ${LANG:-} == tr* ]]; then
   AI_QUESTION="ANKA AI asistanı açılsın mı?\n\nTamamen bilgisayarında çalışır, internete veri göndermez.\nİlk soruda modelini indirir (yaklaşık 5 GB)."
   YES="Evet, aç"
   NO="Hayır"
-  DONE="Hepsi bu kadar!\n\n• Uygulamalar: Discover\n• Oyunlar: Steam (Windows oyunları Proton ile çalışır)\n• Windows programları: Bottles\n• Güncellemeler: Sistem Ayarları › ANKA Updates\n• AI asistan: terminalde  anka-ai \"sorun\""
+  DONE="Hepsi bu kadar!\n\n• Uygulamalar: Discover"
+  has steam && DONE+="\n• Oyunlar: Steam (Windows oyunları Proton ile çalışır)\n• Oyun Modu: giriş ekranında \"Steam\" oturumunu seç"
+  has bottles && DONE+="\n• Windows programları: Bottles"
+  DONE+="\n• Güncellemeler: Sistem Ayarları › ANKA Updates"
+  has anka-ai && DONE+="\n• AI asistan: terminalde  anka-ai \"sorun\""
 else
   TITLE="ANKA OS"
   WELCOME="Welcome to ANKA OS!\n\nYour computer is ready. This takes a few seconds."
   AI_QUESTION="Turn on the ANKA AI assistant?\n\nIt runs entirely on this computer and sends nothing to the internet.\nIt downloads its model on the first question (about 5 GB)."
   YES="Yes, turn it on"
   NO="No"
-  DONE="That's it!\n\n• Apps: Discover\n• Games: Steam (Windows games run through Proton)\n• Windows programs: Bottles\n• Updates: System Settings › ANKA Updates\n• AI assistant: in a terminal,  anka-ai \"your question\""
+  DONE="That's it!\n\n• Apps: Discover"
+  has steam && DONE+="\n• Games: Steam (Windows games run through Proton)\n• Game Mode: pick the \"Steam\" session on the login screen"
+  has bottles && DONE+="\n• Windows programs: Bottles"
+  DONE+="\n• Updates: System Settings › ANKA Updates"
+  has anka-ai && DONE+="\n• AI assistant: in a terminal,  anka-ai \"your question\""
 fi
 
 kdialog --title "$TITLE" --msgbox "$WELCOME" || true
 
-if kdialog --title "$TITLE" --yes-label "$YES" --no-label "$NO" --yesno "$AI_QUESTION"; then
-  set_conf AI_MODE local
-else
-  set_conf AI_MODE none
+if has anka-ai; then
+  if kdialog --title "$TITLE" --yes-label "$YES" --no-label "$NO" --yesno "$AI_QUESTION"; then
+    set_conf AI_MODE local
+  else
+    set_conf AI_MODE none
+  fi
 fi
 
 kdialog --title "$TITLE" --msgbox "$DONE" || true

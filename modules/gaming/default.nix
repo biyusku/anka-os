@@ -34,6 +34,26 @@ in
       };
     };
 
+    gameMode = {
+      enable = lib.mkOption {
+        type    = lib.types.bool;
+        default = true;
+        description = ''
+          SteamOS-style Game Mode: a "Steam" session on the login screen
+          that runs Steam's full-screen controller UI inside Gamescope.
+          Quitting Steam returns to the login screen.
+        '';
+      };
+      default = lib.mkOption {
+        type    = lib.types.bool;
+        default = false;
+        description = ''
+          Make Game Mode the default session, so the computer starts like a
+          console (combine with anka.desktop.autoLogin for SteamOS-style boot).
+        '';
+      };
+    };
+
     gamescope = {
       enable = lib.mkOption {
         type    = lib.types.bool;
@@ -71,6 +91,8 @@ in
 
     # ── Steam ─────────────────────────────────────────────────────────────
     programs.steam = lib.mkIf cfg.steam.enable {
+      # Game Mode: a "Steam" session running Steam's controller UI in Gamescope
+      gamescopeSession.enable = cfg.gameMode.enable;
       enable                        = true;
       remotePlay.openFirewall       = cfg.steam.remotePlay;
       localNetworkGameTransfers.openFirewall = cfg.steam.localNetworkGameTransfers;
@@ -92,6 +114,10 @@ in
       };
       # GE-Proton: anka.compat.windows.geProton
     };
+
+    # ── Game Mode: login-screen session (programs.steam.gamescopeSession) ─
+    services.displayManager.defaultSession =
+      lib.mkIf (cfg.steam.enable && cfg.gameMode.enable && cfg.gameMode.default) "steam";
 
     # ── Gamescope ─────────────────────────────────────────────────────────
     programs.gamescope = lib.mkIf cfg.gamescope.enable {
