@@ -1,4 +1,4 @@
-# ANKA kernel configuration — CachyOS BORE kernel via chaotic-nyx
+# ANKA kernel configuration — Zen kernel by default, CachyOS via chaotic-nyx
 { config, lib, pkgs, ... }:
 
 let
@@ -8,14 +8,19 @@ in
   options.anka.kernel = {
     variant = lib.mkOption {
       type    = lib.types.enum [ "cachyos" "cachyos-bore" "cachyos-lto" "linux_zen" "linux_xanmod" "default" ];
-      default = "cachyos-bore";
+      default = "linux_zen";
       description = ''
         Kernel variant to use.
-        cachyos-bore — CachyOS kernel with BORE scheduler (best for desktop/gaming).
-        cachyos-lto  — CachyOS with link-time optimisation (marginally faster, longer build).
-        linux_zen    — Zen kernel (popular gaming kernel, in nixpkgs).
-        linux_xanmod — Xanmod kernel (latency focused).
-        default      — Stock NixOS kernel.
+        linux_zen    — Zen kernel, tuned for desktop/gaming (default). Prebuilt
+                       on cache.nixos.org, includes sched_ext and ntsync.
+        linux_xanmod — Xanmod kernel (latency focused, prebuilt).
+        default      — Stock NixOS kernel (prebuilt).
+        cachyos-bore — CachyOS kernel with BORE scheduler (chaotic-nyx).
+        cachyos      — same as cachyos-bore.
+        cachyos-lto  — same as cachyos-bore.
+        The CachyOS variants are built against ANKA's nixpkgs, which no
+        binary cache has: they compile the kernel (and an LLVM-22 rustc)
+        on the machine, which takes hours on older hardware.
       '';
     };
 

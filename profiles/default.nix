@@ -16,7 +16,7 @@
       plymouth = true;
       timeout  = 3;
     };
-    kernel.variant = "cachyos-bore";
+    kernel.variant = "linux_zen";   # prebuilt; CachyOS compiles on the machine
 
     # ── Filesystem ────────────────────────────────────────────────────────
     filesystem = {
@@ -92,6 +92,7 @@
         algorithm     = "lz4";
         memoryPercent = 50;
       };
+      scheduler      = "scx_lavd";  # Valve's Steam Deck scheduler
       governor       = "schedutil";
       thp            = "madvise";
       enableEarlyoom = true;

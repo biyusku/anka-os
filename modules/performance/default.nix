@@ -32,6 +32,18 @@ in
       };
     };
 
+    scheduler = lib.mkOption {
+      type    = lib.types.enum [ "none" "scx_lavd" "scx_bpfland" "scx_rusty" ];
+      default = "none";
+      description = ''
+        sched_ext CPU scheduler loaded on top of the kernel's own.
+        scx_lavd — latency-aware scheduler Valve developed for the Steam Deck;
+                   keeps games and the desktop responsive under load.
+        If a sched_ext scheduler stops, the kernel falls back to its default
+        scheduler on its own.
+      '';
+    };
+
     governor = lib.mkOption {
       type    = lib.types.enum [ "schedutil" "ondemand" "powersave" "performance" "conservative" ];
       default = "schedutil";
@@ -164,6 +176,12 @@ in
       ];
     };
 
+    # ── sched_ext scheduler (kernel ≥ 6.12) ──────────────────────────────────
+    services.scx = lib.mkIf (cfg.scheduler != "none") {
+      enable    = true;
+      scheduler = cfg.scheduler;
+    };
+
     # ── Packages ─────────────────────────────────────────────────────────────
     environment.systemPackages = with pkgs; [
       powertop      # CPU power analysis
@@ -173,9 +191,7 @@ in
       numactl       # NUMA topology control
     ];
 
-    # ── CachyOS / BORE kernel extra params ───────────────────────────────────
-    # These are added in modules/system/kernel.nix via chaotic-nyx.
-    # Here we add extra cmdline hints for the BORE scheduler.
+    # ── Low-latency kernel command line ──────────────────────────────────────
     boot.kernelParams = [
       "mitigations=auto"         # keep Spectre/Meltdown mitigations but skip unnecessary ones
       "nowatchdog"               # disable NMI watchdog → lower latency
