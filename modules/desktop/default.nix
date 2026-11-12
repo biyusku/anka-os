@@ -5,6 +5,9 @@ let
   cfg = config.anka.desktop;
 in
 {
+  # ANKA Shell (Hyprland + Quickshell), opt-in next to Plasma
+  imports = [ ./shell ];
+
   options.anka.desktop = {
     enable = lib.mkEnableOption "ANKA desktop environment (KDE Plasma 6 Wayland)";
 
