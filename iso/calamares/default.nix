@@ -70,9 +70,37 @@ let
       "--add-flag --xdg-config"
     ];
   };
+
+  # `pkexec calamares` wipes the environment, so the root Calamares cannot find
+  # the live Plasma Wayland session and exits at once ("XDG_RUNTIME_DIR is
+  # invalid", no Qt platform plugin). The live user has passwordless sudo
+  # (iso/default.nix); keep the session variables across it.
+  installAnka = pkgs.writeShellScriptBin "install-anka" ''
+    exec /run/wrappers/bin/sudo \
+      --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR,DISPLAY,XAUTHORITY,QT_QPA_PLATFORM,XDG_SESSION_TYPE \
+      ${ankaCalamares}/bin/calamares "$@"
+  '';
+
+  # "Install ANKA" with the ANKA logo (desktop shortcut, app menu, autostart)
+  # in place of Calamares' own "Install System" entry.
+  installerDesktop = pkgs.writeTextDir "share/applications/calamares.desktop" ''
+    [Desktop Entry]
+    Type=Application
+    Name=Install ANKA
+    Name[tr]=ANKA'yı Kur
+    Comment=Install ANKA OS on this computer
+    Comment[tr]=ANKA OS'i bu bilgisayara kur
+    Exec=${installAnka}/bin/install-anka
+    Icon=anka
+    Terminal=false
+    StartupNotify=true
+    Categories=Qt;System;
+    X-AppStream-Ignore=true
+  '';
 in
 {
-  # Calamares runs as the live user and elevates through pkexec.
+  # Calamares runs as root through `install-anka`; partitioning helpers
+  # (kpmcore) may still call pkexec.
   security.polkit.enablePkexecWrapper = true;
 
   # kpmcore (Calamares' partitioning backend) needs it.
@@ -83,25 +111,10 @@ in
 
   environment.systemPackages = [
     ankaCalamares
-    # "Install ANKA" with the ANKA logo (desktop shortcut and app menu)
-    # in place of Calamares' own "Install System" entry.
-    (lib.hiPrio (pkgs.writeTextDir "share/applications/calamares.desktop" ''
-      [Desktop Entry]
-      Type=Application
-      Name=Install ANKA
-      Name[tr]=ANKA'yı Kur
-      Comment=Install ANKA OS on this computer
-      Comment[tr]=ANKA OS'i bu bilgisayara kur
-      Exec=sh -c "pkexec calamares"
-      TryExec=calamares
-      Icon=anka
-      Terminal=false
-      StartupNotify=true
-      Categories=Qt;System;
-      X-AppStream-Ignore=true
-    ''))
+    installAnka
+    (lib.hiPrio installerDesktop)
     # Open the installer as soon as the live desktop starts.
-    (pkgs.makeAutostartItem { name = "calamares"; package = ankaCalamares; })
+    (pkgs.makeAutostartItem { name = "calamares"; package = installerDesktop; })
     pkgs.glibcLocales
     pkgs.pciutils   # lspci, for GPU detection in ankainstall
   ];
