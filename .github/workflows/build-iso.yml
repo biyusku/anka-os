@@ -7,8 +7,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "0 9 * * 1" # update-flake-lock job only
 
 jobs:
   build-iso:
@@ -56,31 +54,3 @@ jobs:
         with:
           files: result-${{ matrix.variant }}/iso/*.iso
           generate_release_notes: true
-
-  update-flake-lock:
-    name: Update flake.lock
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-
-      - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@main
-        with:
-          pr-title: "chore: update flake.lock"
-          pr-labels: |
-            dependencies
-            automated
-          pr-body: |
-            Automated weekly flake.lock update.
-
-            This PR was created by the `update-flake-lock` GitHub Actions workflow.
-          token: "${{ secrets.GITHUB_TOKEN }}"

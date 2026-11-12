@@ -1,0 +1,41 @@
+# Kept separate from build-iso.yml: GitHub disables workflows with a
+# `schedule` trigger after 60 days without repo activity, and a disabled
+# workflow stops running on push too. Only this workflow can be disabled now.
+name: Update flake.lock
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-flake-lock:
+    name: Update flake.lock
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Update flake.lock
+        uses: DeterminateSystems/update-flake-lock@main
+        with:
+          pr-title: "chore: update flake.lock"
+          pr-labels: |
+            dependencies
+            automated
+          pr-body: |
+            Automated weekly flake.lock update.
+
+            This PR was created by the `update-flake-lock` GitHub Actions workflow.
+          token: "${{ secrets.GITHUB_TOKEN }}"
