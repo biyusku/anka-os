@@ -47,15 +47,33 @@ LOCALE_KEYS = [
     "LC_NUMERIC", "LC_PAPER", "LC_TELEPHONE", "LC_TIME",
 ]
 
+TURKISH_STATUS = {
+    "Installing ANKA OS": "ANKA OS kuruluyor",
+    "Detecting hardware": "Donanım algılanıyor",
+    "Writing the ANKA configuration": "ANKA yapılandırması yazılıyor",
+}
+
 status = "Installing ANKA OS"
 
 
+def localized(message, lang):
+    """*message* in Turkish when *lang* (a LANG value such as tr_TR.UTF-8) is Turkish."""
+    if str(lang or "").startswith("tr"):
+        return TURKISH_STATUS.get(message, message)
+    return message
+
+
+def _ui_lang():
+    locale_conf = libcalamares.globalstorage.value("localeConf") or {}
+    return locale_conf.get("LANG", "")
+
+
 def pretty_name():
-    return "Installing ANKA OS"
+    return localized("Installing ANKA OS", _ui_lang())
 
 
 def pretty_status_message():
-    return status
+    return localized(status, _ui_lang())
 
 
 # ---------------------------------------------------------------------------

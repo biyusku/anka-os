@@ -134,6 +134,30 @@
     shell           = pkgs.bash;
   };
 
+  # The live session has no password: never lock the screen or put the
+  # computer to sleep, an install can run for half an hour unattended.
+  # (kscreenlockerrc is also written by modules/branding; `text` concatenates.)
+  environment.etc."xdg/kscreenlockerrc".text = lib.mkAfter ''
+    [Daemon]
+    Autolock=false
+    LockOnResume=false
+  '';
+  environment.etc."xdg/powerdevilrc".text = ''
+    [AC][Display]
+    DimDisplayWhenIdle=false
+    TurnOffDisplayWhenIdle=false
+
+    [AC][SuspendAndShutdown]
+    AutoSuspendAction=0
+
+    [Battery][Display]
+    DimDisplayWhenIdle=false
+    TurnOffDisplayWhenIdle=false
+
+    [Battery][SuspendAndShutdown]
+    AutoSuspendAction=0
+  '';
+
   # Allow sudo without password for the live session
   security.sudo = {
     enable         = true;
@@ -151,7 +175,9 @@
   };
 
   # ── ISO image settings ─────────────────────────────────────────────────────
-  image.fileName = "anka-${gpu}.iso";
+  # The ISO builder names the file from image.baseName (image.fileName is
+  # not read by it), and nixpkgs sets baseName to "nixos-<edition>-...".
+  image.baseName = lib.mkForce "anka-${gpu}";
 
   isoImage = {
     volumeID            = "anka-OS";

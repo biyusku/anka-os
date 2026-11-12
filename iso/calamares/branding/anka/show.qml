@@ -6,8 +6,11 @@ import calamares.slideshow 1.0
 Presentation {
     id: presentation
 
-    // The language picked on the first page of the installer
-    function t(tr, en) { return Qt.locale().name.indexOf("tr") === 0 ? tr : en }
+    // The language picked on the first page of the installer. Calamares sets
+    // QLocale's default and calls engine.retranslate() on a language change;
+    // retranslate() only re-evaluates bindings that call qsTr(), hence the
+    // empty qsTr() — without it every slide stays in the start-up language.
+    function t(tr, en) { return qsTr("") + (Qt.locale().name.indexOf("tr") === 0 ? tr : en) }
 
     SystemPalette { id: palette; colorGroup: SystemPalette.Active }
 

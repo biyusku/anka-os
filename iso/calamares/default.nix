@@ -53,6 +53,9 @@ let
     substitute ${./settings.conf} $out/etc/calamares/settings.conf \
       --replace-fail @ankaModules@ $out/lib/calamares/modules
     cp ${./modules}/*.conf $out/etc/calamares/modules/
+    chmod u+w $out/etc/calamares/modules/*.conf
+    substituteInPlace $out/etc/calamares/modules/packagechooser.conf \
+      --replace-fail @ankaLogo@ ${../../modules/branding/artwork/logo.svg}
     cp ${ankainstallConf} $out/etc/calamares/modules/ankainstall.conf
     cp -r ${./branding/anka} $out/share/calamares/branding/anka
     chmod -R u+w $out/share/calamares/branding/anka

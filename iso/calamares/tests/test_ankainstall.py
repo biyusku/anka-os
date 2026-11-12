@@ -175,6 +175,19 @@ class OtherOsPresent(unittest.TestCase):
         self.assertTrue(ankainstall.other_os_present("vfat\nbtrfs\n", str(esp)))
 
 
+class Localized(unittest.TestCase):
+    def test_turkish_ui(self):
+        self.assertEqual(ankainstall.localized("Installing ANKA OS", "tr_TR.UTF-8"), "ANKA OS kuruluyor")
+
+    def test_other_languages_stay_english(self):
+        self.assertEqual(ankainstall.localized("Installing ANKA OS", "de_DE.UTF-8"), "Installing ANKA OS")
+        self.assertEqual(ankainstall.localized("Installing ANKA OS", None), "Installing ANKA OS")
+
+    def test_every_status_has_a_turkish_text(self):
+        for message in ("Detecting hardware", "Writing the ANKA configuration", "Installing ANKA OS"):
+            self.assertNotEqual(ankainstall.localized(message, "tr_TR.UTF-8"), message)
+
+
 class BuildConfiguration(unittest.TestCase):
     def test_efi_btrfs_desktop(self):
         cfg = ankainstall.build_configuration(settings())
