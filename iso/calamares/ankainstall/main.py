@@ -327,8 +327,13 @@ def _set_status(message, progress):
 
 
 def _write_root_file(path, text):
-    """Write *text* to *path*; the job runs unprivileged, the target is root-owned."""
-    libcalamares.utils.host_env_process_output(["cp", "/dev/stdin", path], None, text)
+    """
+    Write *text* to *path* (root-owned target), readable by everyone.
+
+    Not `cp /dev/stdin`: a new file would get the pipe's 0600 mode, and the
+    user-facing ANKA Updates page could not read /etc/nixos/flake.lock.
+    """
+    libcalamares.utils.host_env_process_output(["install", "-m", "0644", "/dev/stdin", path], None, text)
 
 
 def _load_upstream(path):

@@ -168,6 +168,11 @@ in
     # Use zsh as default shell
     users.defaultUserShell = pkgs.zsh;
 
+    # Without a ~/.zshrc, zsh opens its new-user setup wizard in the first
+    # terminal (and swallows the first key). The system zshrc above already
+    # configures everything; an empty file is enough.
+    system.userActivationScripts.zshrc = ''[ -e "$HOME/.zshrc" ] || touch "$HOME/.zshrc"'';
+
     # ── nix / nixpkgs configuration ───────────────────────────────────────
     nix = {
       settings = {

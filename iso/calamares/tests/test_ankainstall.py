@@ -304,8 +304,11 @@ class Run(unittest.TestCase):
             def wait(self):
                 return 0
 
+        self.written_with = written_with = []
+
         def host_env_process_output(cmd, _cb, stdin):
-            pathlib.Path(cmd[2]).write_text(stdin)
+            written_with.append(cmd[:-1])
+            pathlib.Path(cmd[-1]).write_text(stdin)
 
         calamares = types.SimpleNamespace(
             globalstorage=FakeGlobalStorage({
@@ -358,6 +361,14 @@ class Run(unittest.TestCase):
         self.assertEqual(install[:2], ["pkexec", "nixos-install"])
         self.assertIn(str(etc) + "#anka", install)
         self.assertNotIn("--override-input", install)
+
+    def test_etc_nixos_files_are_world_readable(self):
+        # ANKA Updates runs as the user and reads /etc/nixos/flake.lock;
+        # `cp /dev/stdin` used to leave new files 0600.
+        self.assertIsNone(ankainstall.run())
+        self.assertTrue(self.written_with)
+        for cmd in self.written_with:
+            self.assertEqual(cmd, ["install", "-m", "0644", "/dev/stdin"])
 
 
 if __name__ == "__main__":

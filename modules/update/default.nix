@@ -119,6 +119,14 @@ in
     # anka-update drives flakes.
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+    # ANKA Updates reads the system flake as the user. Installers before
+    # 2026-11 wrote flake.nix and flake.lock 0600; fix them on boot and on
+    # every switch (`z` only touches files that exist).
+    systemd.tmpfiles.rules = [
+      "z ${cfg.flakePath}/flake.nix 0644 root root -"
+      "z ${cfg.flakePath}/flake.lock 0644 root root -"
+    ];
+
     # ── Check: on boot and every checkInterval ─────────────────────────────
     systemd.services.anka-update-check = rebuildUnit "ANKA Update Check" "check";
 

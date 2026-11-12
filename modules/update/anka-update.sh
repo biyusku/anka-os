@@ -43,6 +43,8 @@ require_root() {
 
 require_anka_flake() {
   [[ -f $FLAKE_LOCK ]] || die "$FLAKE_LOCK not found — this machine was not installed with the ANKA installer"
+  # Early installers left it 0600; the first update as root fixes that.
+  [[ -r $FLAKE_LOCK ]] || die "cannot read $FLAKE_LOCK — run 'sudo anka-update apply' once"
   [[ -n $(current_rev) ]] || die "$FLAKE_LOCK has no locked 'anka' input"
 }
 
