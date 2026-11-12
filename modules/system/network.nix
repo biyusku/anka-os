@@ -57,7 +57,13 @@ in
       enable = true;
       settings = {
         Resolve = {
-          DNSSEC          = if cfg.dnssec then "true" else "allow-downgrade";
+          # Off unless asked for. "allow-downgrade" only falls back for
+          # servers without any DNSSEC support; many home routers pass the
+          # DO bit on but strip signatures, and then every lookup fails
+          # with "DNSSEC validation failed: no-signature" (seen on a
+          # 192.168.1.1 router and VirtualBox NAT). Fedora and Arch
+          # default to off for the same reason.
+          DNSSEC          = if cfg.dnssec then "true" else "false";
           FallbackDNS     = lib.concatStringsSep " " cfg.dns;
           DNSStubListener = "yes";
           LLMNR           = "no";
