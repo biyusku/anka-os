@@ -136,6 +136,7 @@
             stock-kernel  = { anka.kernel.variant = "default"; };
             ai-cpu        = { anka.ai.acceleration = "cpu"; };
             update-auto   = { anka.update.autoApply = true; anka.update.channel = "unstable"; };
+            anka-shell    = { anka.desktop.shell = { enable = true; default = true; }; };
           };
           evaluate = name: module:
             builtins.unsafeDiscardStringContext
@@ -154,6 +155,9 @@
       anka-mcp        = self.nixosConfigurations.anka.config.system.build.ankaMcpServers;
       anka-first-run  = self.nixosConfigurations.anka.config.system.build.ankaFirstRun;
       anka-artwork    = self.nixosConfigurations.anka.config.system.build.ankaArtwork;
+      anka-shell      = (self.nixosConfigurations.anka.extendModules {
+        modules = [{ anka.desktop.shell.enable = true; }];
+      }).config.system.build.ankaShell;
     };
 
     # ── Convenience package aliases ───────────────────────────────────────
